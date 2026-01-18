@@ -1,0 +1,30 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Environment Variables (Segurança Crítica)
+.env
+
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store
+
+# Dados Locais e Cache do Projeto
+data/
+*.log
+tle_cache.txt
+world_map.jpg
+
+# Caso você queira manter a pasta data mas ignorar o conteúdo, 
+# descomente a linha abaixo e crie um .gitkeep dentro dela
+# data/*
+# !data/.gitkeep
