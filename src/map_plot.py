@@ -152,14 +152,34 @@ class MapGenerator:
                     ry = (gy - crop_y1) * SCALE
                     return rx, ry
 
-                # Font (Scale font size)
-                # Base 1 deg = ~23px. Scale 3x -> ~70px height.
-                # Font size 14-16px will look crisp and small.
-                target_font_size = int(14 * (SCALE if SCALE >= 1 else 1))
+                # Dynamic Font Sizing
+                # Calculate actual pixels per degree of latitude in the final image
+                # This tells us the height of a grid square
+                if (max_lat - min_lat) > 0:
+                    px_per_deg = new_h / (max_lat - min_lat)
+                else:
+                    px_per_deg = 20 # Fallback
+                
+                # We need to fit 2 lines (Grid + Call) + margins
+                # Ideally font size is around 40% of grid height?
+                target_font_size = int(px_per_deg / 2.3)
+                
+                # Clamp minimum size to ensure readability even if it overlaps borders slightly
+                if target_font_size < 9:
+                    target_font_size = 9
+                
+                # Load Font
                 try:
                     font = ImageFont.truetype(str(self.font_path), target_font_size)
                 except:
                     font = ImageFont.load_default()
+
+                # Stroke Logic: Don't stroke tiny fonts as it ruins legibility
+                stroke_w = 0
+                if target_font_size >= 12:
+                    stroke_w = 2
+                elif target_font_size >= 10:
+                    stroke_w = 1
 
                 # Colors
                 fill_color = (34, 197, 94, 60)
@@ -194,13 +214,21 @@ class MapGenerator:
                          cy = (py_top + py_bottom) / 2
                          label_call = grid_labels[grid]
                          
-                         # Scaled offset
-                         off = 8 * SCALE
-                         # Stroke logic
-                         stroke_w = max(1, int(1.5 * SCALE))
+                         # Offset based on font size (approx 1/2 line height)
+                         off = target_font_size * 0.6
                          
-                         draw_ov.text((cx, cy - off), grid, font=font, fill=text_color, anchor="mm", stroke_width=stroke_w, stroke_fill="black")
-                         draw_ov.text((cx, cy + off), label_call, font=font, fill=text_color, anchor="mm", stroke_width=stroke_w, stroke_fill="black")
+                         if stroke_w > 0:
+                             draw_ov.text((cx, cy - off), grid, font=font, fill=text_color, anchor="mm", stroke_width=stroke_w, stroke_fill="black")
+                             draw_ov.text((cx, cy + off), label_call, font=font, fill=text_color, anchor="mm", stroke_width=stroke_w, stroke_fill="black")
+                         else:
+                             # No stroke, maybe shadow? Or just text.
+                             # For tiny text, black shadow manually? No, simple is better.
+                             # Trying a simple drop shadow for contrast
+                             draw_ov.text((cx+1, cy - off + 1), grid, font=font, fill="black", anchor="mm")
+                             draw_ov.text((cx, cy - off), grid, font=font, fill=text_color, anchor="mm")
+                             
+                             draw_ov.text((cx+1, cy + off + 1), label_call, font=font, fill="black", anchor="mm")
+                             draw_ov.text((cx, cy + off), label_call, font=font, fill=text_color, anchor="mm")
                 
                 final_im = Image.alpha_composite(final_im, overlay_layer)
                 final_im = final_im.convert("RGB")
