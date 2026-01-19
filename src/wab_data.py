@@ -114,9 +114,17 @@ def grid_to_latlon(grid: str):
         
     return lat, lon
 
-def get_state_from_grid(grid: str) -> str:
-    """Mapeia Grid -> Estado usando Geometria (Ponto no Polígono)."""
+    # Config
     if not grid or len(grid) < 4: return None
+    
+    # 0. Manual Overrides (Small states / Ambiguity)
+    # GH64 center falls in GO, but it is the main grid for Brasilia (DF).
+    MANUAL_GRID_MAP = {
+        "GH64": "DF"
+    }
+    if grid in MANUAL_GRID_MAP:
+        return MANUAL_GRID_MAP[grid]
+
     if not SHAPELY_AVAILABLE: return None
     
     try:
