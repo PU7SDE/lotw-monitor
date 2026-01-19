@@ -8,7 +8,7 @@ Além de monitorar QSLs, o bot oferece ferramentas úteis para o dia-a-dia da op
 
 - **Monitoramento Automático**: Verifica periodicamente se novos grids foram confirmados no LoTW.
 - **Alertas Instantâneos**: Avisa no Telegram assim que um grid novo ("new one") é confirmado.
-- **Visualização de Progresso**: Gera mapas visuais mostrando quais grids você já trabalhou e quais já confirmou.
+- **Visualização de Progresso**: Gera mapas visuais mostrando as áreas que você já tem confirmadas.
 - **Utilidade**: Verifica atualização de elementos keplerianos (TLE) e permite consultas rápidas de indicativos.
 
 ## 🚀 Funcionalidades
@@ -16,7 +16,6 @@ Além de monitorar QSLs, o bot oferece ferramentas úteis para o dia-a-dia da op
 - **`/grids`**: Exibe relatório estatístico dos grids confirmados.
 - **`/map`**: Gera um mapa-múndi focado na sua região de atuação.
     - 🟩 **Verde**: Grid Confirmado.
-    - 🟥 **Vermelho**: Grid Trabalhado (QSO feito) mas aguardando confirmação.
 - **`/check <CALL>`**: Verifica rapidamente se você já trabalhou um determinado indicativo.
 - **`/tle`**: Verifica se o arquivo de TLE do PU4ELT foi atualizado.
 - **`/sync`**: Força uma sincronização manual com o LoTW.
