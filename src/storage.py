@@ -142,6 +142,24 @@ class Storage:
                 stats[g]["calls"].add(qso.get("CALL", "UNKNOWN"))
         return stats
 
+    def get_grid_labels(self) -> Dict[str, str]:
+        """
+        Retorna um dicionário {GRID: CALL} para os grids confirmados.
+        Escolhe arbitrariamente um call caso haja múltiplos (ex: o mais recente processado).
+        """
+        labels = {}
+        qsos = list(self.data.get("qso_cache", {}).values())
+        qsos.sort(key=lambda x: (x.get("QSO_DATE", ""), x.get("TIME_ON", "")))
+        
+        for qso in qsos:
+            is_confirmed = (qso.get("QSL_RCVD", "").upper() == "Y")
+            if is_confirmed:
+                call = qso.get("CALL", "?")
+                grids = self._extract_grids(qso)
+                for g in grids:
+                    labels[g] = call
+        return labels
+
     def get_dashboard_stats(self) -> Dict[str, Any]:
         """
         Retorna estatísticas detalhadas do dashboard (similar ao HTML fornecido).
