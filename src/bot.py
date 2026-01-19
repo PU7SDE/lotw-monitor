@@ -204,15 +204,10 @@ class MonitorBot:
             
             self.send_message(chat_id, full_msg)
 
-        elif text.startswith("/sync"):
-            parts = text.split()
-            is_full = False
-            if len(parts) > 1 and parts[1].lower() == "full":
-                is_full = True
-                
-            mode_str = "COMPLETA (baixa tudo)" if is_full else "incremental"
-            self.send_message(chat_id, f"🔄 Iniciando sincronização {mode_str} em background...")
-            t = threading.Thread(target=self.run_check_job, args=(True, chat_id, is_full))
+        elif text == "/sync" or text.startswith("/sync "):
+            self.send_message(chat_id, "🔄 Iniciando sincronização COMPLETA (pode demorar)...")
+            # User requested /sync to be FULL by default
+            t = threading.Thread(target=self.run_check_job, args=(True, chat_id, True)) # force_full=True
             t.start()
             
         elif text == "/map":
