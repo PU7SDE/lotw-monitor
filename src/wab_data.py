@@ -12,7 +12,7 @@ GRID_TO_STATE = {
     # AM - Manaus
     "FI66": "AM", "FJ92": "AM", "GJ93": "AM",
     # BA - Salvador
-    "HH17": "BA", "HH27": "BA", "HH38": "BA", "GH56": "BA",
+    "HH17": "BA", "HH27": "BA", "HH38": "BA", "GH56": "BA", "GI90": "BA",
     # CE - Fortaleza
     "HK16": "CE", "HI16": "CE", "HI06": "CE",
     # DF - Brasília
@@ -26,7 +26,7 @@ GRID_TO_STATE = {
     # MT - Cuiabá
     "GH34": "MT", "GH44": "MT",
     # MS - Campo Grande
-    "GH49": "MS", "GH59": "MS",
+    "GH49": "MS", 
     # MG - BH
     "GH70": "MG", "GH80": "MG", "GH81": "MG", "GH71": "MG", "GG79": "MG",
     # PA - Belém
@@ -56,7 +56,7 @@ GRID_TO_STATE = {
     # SE - Aracaju
     "HH19": "SE",
     # TO - Palmas
-    "GH69": "TO", "GI60": "TO",
+    "GH69": "TO", "GI60": "TO", "GH59": "TO",
 }
 
 def get_state_from_grid(grid: str) -> str:
