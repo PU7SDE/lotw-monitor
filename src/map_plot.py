@@ -8,9 +8,9 @@ from pathlib import Path
 logger = logging.getLogger(__name__)
 
 class MapGenerator:
-    # Mapa Equiretangular (Plate Carrée) simples
+    # Mapa Equiretangular (Plate Carrée) - Blue Marble Next Generation
     # X vai de -180 a 180, Y vai de 90 a -90
-    MAP_URL = "https://upload.wikimedia.org/wikipedia/commons/thumb/8/83/Equirectangular_projection_SW.jpg/2048px-Equirectangular_projection_SW.jpg"
+    MAP_URL = "https://upload.wikimedia.org/wikipedia/commons/thumb/c/cd/Land_ocean_ice_8192.png/4096px-Land_ocean_ice_8192.png"
     
     def __init__(self, cache_dir: Path):
         self.cache_dir = cache_dir
