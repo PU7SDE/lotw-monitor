@@ -211,7 +211,7 @@ class MonitorBot:
              try:
                  img_bytes = self.map_gen.generate(confirmed, worked)
                  if img_bytes:
-                     self.send_photo(chat_id, img_bytes, "Mapa de Grids (Verde=Confirmado, Vermelho=Trabalhado)")
+                     self.send_photo(chat_id, img_bytes, "Mapa de Grids Confirmados (Verde)")
                  else:
                      logger.error("Falha ao gerar mapa: map_gen.generate retornou vazio.")
                      self.send_message(chat_id, "❌ Erro ao gerar o mapa: retorno vazio.")
@@ -247,6 +247,18 @@ class MonitorBot:
             
             if not found:
                 self.send_message(chat_id, f"❌ Nenhum registro encontrado para `{call_to_check}`.")
+
+        elif text.startswith("/forget "):
+            # Comando de DEBUG para testar alerta de novo grid
+            # Remove um grid da lista 'known_grids'
+            grid_to_forget = text[8:].strip().upper()
+            if grid_to_forget in self.storage.known_grids:
+                self.storage.known_grids.remove(grid_to_forget)
+                self.storage.data["known_grids"] = sorted(list(self.storage.known_grids))
+                self.storage.save()
+                self.send_message(chat_id, f"🗑️ Grid {grid_to_forget} esquecido. Rode /sync para detectá-lo como novo.")
+            else:
+                self.send_message(chat_id, f"⚠️ Grid {grid_to_forget} não estava na lista de confirmados.")
 
     def start_polling(self):
         logger.info("Bot iniciado...")
