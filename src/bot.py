@@ -248,7 +248,7 @@ class MonitorBot:
                 "",
                 f"🌍 *DXCC:* `{d['dxcc_count']}`  •  *CQ:* `{d['cq_count']}`  •  *ITU:* `{d['itu_count']}`",
                 "",
-                "🏆 *Top Grid Hunters:*"
+                "🏆 *Top Grid Activators:*"
             ]
             
             if d['top_hunters']:
