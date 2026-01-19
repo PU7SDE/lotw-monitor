@@ -249,11 +249,11 @@ class MonitorBot:
             
             self.send_message(chat_id, "\n".join(msg))
 
-        elif text == "/sync" or text.startswith("/sync "):
+        elif text == "/sync" or text.startswith("/sync ") or text == "/sync_full":
             # Parse arguments
             args = text.split()
             force_full = False
-            if len(args) > 1 and args[1].lower() == "full":
+            if (len(args) > 1 and args[1].lower() == "full") or (text == "/sync_full"):
                 force_full = True
             
             mode_str = "COMPLETA (Full Download)" if force_full else "Inteligente (Smart Sync)"
@@ -361,31 +361,53 @@ class MonitorBot:
                 logger.error(f"Erro teste: {e}")
                 self.send_message(chat_id, f"❌ Erro: {e}")
 
+    def set_bot_commands(self):
+        """Configura o menu de comandos no Telegram via API."""
+        commands = [
+            {"command": "stats", "description": "📊 Dashboard de Estatísticas"},
+            {"command": "map", "description": "🗺️ Gerar Mapa Visual"},
+            {"command": "sync", "description": "🔄 Sincronizar (Rápido)"},
+            {"command": "sync_full", "description": "📥 Sincronizar TUDO (Completo)"},
+            {"command": "grids", "description": "📋 Resumo de Grids"},
+            {"command": "tle", "description": "🛰️ Checar TLEs"},
+            {"command": "check", "description": "🔍 Checar Call (Ex: /check call)"},
+            {"command": "help", "description": "❓ Ajuda"}
+        ]
+        url = f"https://api.telegram.org/bot{self.token}/setMyCommands"
+        try:
+            r = requests.post(url, json={"commands": commands})
+            r.raise_for_status()
+            logger.info("Menu de comandos configurado com sucesso.")
+        except Exception as e:
+            logger.error(f"Erro ao configurar menu de comandos: {e}")
+
     def send_help(self, chat_id: str):
         """Envia mensagem de ajuda com os comandos disponíveis."""
         lines = [
             "🤖 *LoTW Monitor Bot - Ajuda*",
             "",
             "Comandos disponíveis:",
-            "• `/grids` - Relatório estatístico dos grids confirmados.",
-            "• `/map` - Mapa visual dos grids confirmados (Verde).",
-            "• `/check <CALL>` - Verifica se você já trabalhou um indicativo.",
-            "• `/stats` - Dashboard completo de estatísticas.",
-            "• `/sync` - Sincronização inteligente (rápida).",
-            "• `/sync full` - Força download completo de todo histórico.",
-            "• `/tle` - Verifica atualização dos elementos keplerianos.",
-            "• `/forget <GRID>` - Remove um grid da lista (para forçar re-sync).",
-            "• `/help` - Mostra esta mensagem."
+            "• `/stats` - Dashboard completo.",
+            "• `/map` - Mapa visual.",
+            "• `/sync` - Sincronização rápida.",
+            "• `/sync_full` - Sincronização COMPLETA.",
+            "• `/check <CALL>` - Verificar indicativo.",
+            "• `/grids` - Listar grids.",
+            "• `/tle` - Atualizar TLEs.",
+            "• `/help` - Ajuda.",
         ]
         self.send_message(chat_id, "\n".join(lines))
 
     def start_polling(self):
         logger.info("Bot iniciado...")
         
+        # Configurar menu
+        self.set_bot_commands()
+        
         # Envia mensagem de startup
         try:
-            self.send_message(self.allowed_chat_id, "🤖 *Bot Iniciado!* Pronto para monitorar.")
-            self.send_help(self.allowed_chat_id)
+            self.send_message(self.allowed_chat_id, "🤖 *Bot Iniciado!* Menu de comandos ativo. ☰")
+            # self.send_help(self.allowed_chat_id) # Help não é mais tão necessário na startup se tem menu
         except Exception as e:
             logger.error(f"Erro ao enviar mensagem de startup: {e}")
 
