@@ -183,9 +183,10 @@ class MapGenerator:
                     stroke_w = 1
 
                 # Colors
-                # User requested "Navy/Marine Blue" but visible (not Celestial/Sky)
-                # Royal Blue: (65, 105, 225) tends to look good and contrasty
-                fill_color = (65, 105, 225, 80) 
+                # User requested "Laranja" (Orange) for better highlight/contrast
+                # Orange: (255, 165, 0)
+                # Using a slightly translucent Orange
+                fill_color = (255, 165, 0, 90)
                 outline_color = (0, 0, 0)
                 text_color = (255, 255, 255)
                 
