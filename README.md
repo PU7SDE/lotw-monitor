@@ -36,12 +36,19 @@ Além de monitorar QSLs, o bot oferece ferramentas úteis para o dia-a-dia da op
    cd lotw-monitor
    ```
 
-2. **Instale as dependências**:
+
+2. **Crie um ambiente virtual (Obrigatório em VPS/Linux recentes):**
+   ```bash
+   python3 -m venv venv
+   source venv/bin/activate
+   ```
+
+3. **Instale as dependências**:
    ```bash
    pip install -r requirements.txt
    ```
 
-3. **Configure as credenciais**:
+4. **Configure as credenciais**:
    - Renomeie o arquivo de exemplo:
      ```bash
      cp .env.example .env
