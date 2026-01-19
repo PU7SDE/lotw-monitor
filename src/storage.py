@@ -280,11 +280,18 @@ class Storage:
         # Prepare Top Hunters (Sort by Unique Grids desc)
         sorted_hunters = sorted(hunter_grids.items(), key=lambda item: len(item[1]), reverse=True)
         # Pegar top 5
-        for call, grids in sorted_hunters[:5]:
+        # Pegar top 5 (Filtrando > 2 grids conforme pedido)
+        for call, grids in sorted_hunters:
+            if len(grids) <= 2:
+                continue
+                
             stats["top_hunters"].append({
                 "call": call,
                 "count": len(grids),
                 "grids": ", ".join(sorted(list(grids))[:5]) + ("..." if len(grids)>5 else "")
             })
+            
+            if len(stats["top_hunters"]) >= 5:
+                break
             
         return stats
