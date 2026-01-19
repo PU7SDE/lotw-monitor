@@ -21,7 +21,8 @@ class MapGenerator:
         if not self.map_path.exists():
             try:
                 logger.info("Baixando mapa base...")
-                r = requests.get(self.MAP_URL, stream=True, timeout=60)
+                headers = {"User-Agent": "Mozilla/5.0 (compatible; LoTWMonitor/1.0)"}
+                r = requests.get(self.MAP_URL, stream=True, timeout=60, headers=headers)
                 r.raise_for_status()
                 with open(self.map_path, 'wb') as f:
                     for chunk in r.iter_content(chunk_size=8192):
