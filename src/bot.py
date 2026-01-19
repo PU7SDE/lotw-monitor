@@ -87,7 +87,7 @@ class MonitorBot:
         except Exception as e:
             logger.error(f"Erro ao enviar mapa automático: {e}")
 
-    def run_check_job(self, manual=False, chat_id=None):
+    def run_check_job(self, manual=False, chat_id=None, force_full=False):
         """
         Roda o processo de verificação (pode ser demorado).
         Deve ser rodado em thread se chamado pelo bot.
@@ -98,11 +98,14 @@ class MonitorBot:
             return
 
         try:
-            logger.info("Iniciando check job...")
+            logger.info(f"Iniciando check job (manual={manual}, force_full={force_full})...")
             # 1. Determina data de corte (incremental)
             # Se for manual, pode querer forçar tudo, mas para eficiência vamos usar incremental seguro
             # Se precisar de FULL SYNC, o usuário pode deletar o state.json
             last_date = self.storage.last_qso_date
+            
+            if force_full:
+                last_date = "1900-01-01"
             
             # Se a última data for muito antiga (padrão), enviamos ela explicitamente "1900-01-01"
             # para garantir que o LoTW traga tudo (evitando default do sistema)
@@ -201,9 +204,15 @@ class MonitorBot:
             
             self.send_message(chat_id, full_msg)
 
-        elif text == "/sync":
-            self.send_message(chat_id, "🔄 Iniciando sincronização em background...")
-            t = threading.Thread(target=self.run_check_job, args=(True, chat_id))
+        elif text.startswith("/sync"):
+            parts = text.split()
+            is_full = False
+            if len(parts) > 1 and parts[1].lower() == "full":
+                is_full = True
+                
+            mode_str = "COMPLETA (baixa tudo)" if is_full else "incremental"
+            self.send_message(chat_id, f"🔄 Iniciando sincronização {mode_str} em background...")
+            t = threading.Thread(target=self.run_check_job, args=(True, chat_id, is_full))
             t.start()
             
         elif text == "/map":
