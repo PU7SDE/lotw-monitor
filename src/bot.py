@@ -203,9 +203,11 @@ class MonitorBot:
                  if img_bytes:
                      self.send_photo(chat_id, img_bytes, "Mapa de Grids (Verde=Confirmado, Vermelho=Trabalhado)")
                  else:
-                     self.send_message(chat_id, "❌ Erro ao gerar mapa.")
+                     logger.error("Falha ao gerar mapa: map_gen.generate retornou vazio.")
+                     self.send_message(chat_id, "❌ Erro ao gerar o mapa: retorno vazio.")
              except Exception as e:
-                 self.send_message(chat_id, f"❌ Erro: {e}")
+                 logger.exception("Exceção ao gerar mapa")
+                 self.send_message(chat_id, f"❌ Erro ao gerar o mapa: {e}")
 
         elif text == "/tle":
             changed = self.tle_mon.check_update()

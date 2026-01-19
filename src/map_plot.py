@@ -162,7 +162,7 @@ class MapGenerator:
                 # Converter para RGB (remover alpha) e salvar em buffer
                 out = out.convert("RGB")
                 buf = io.BytesIO()
-                out.save(buf, format="JPEG", quality=85)
+                out.save(buf, format="PNG")
                 return buf.getvalue()
                 
         except Exception as e:
