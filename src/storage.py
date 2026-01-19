@@ -312,9 +312,15 @@ class Storage:
             best_grid = grids_list[0] if grids_list else ""
             state = get_state_from_grid(best_grid)
             
-            # User requested strict Grid-Only verification.
-            # No Call Prefix guessing.
-            # No ADIF State trust (unless implicitly trusted via grid).
+            # 2. Try by Callsign (Fallback - RESTORED)
+            if not state:
+                 call = qso.get("CALL", "")
+                 state = get_state_from_call(call)
+            
+            # 3. Try by ADIF Field
+            if not state:
+                st = qso.get("STATE", "").upper().strip()
+                if len(st) == 2: state = st
                 
             if state:
                 wab_states.add(state)

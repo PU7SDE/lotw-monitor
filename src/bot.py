@@ -296,7 +296,7 @@ class MonitorBot:
             # Usage: /debug_state MS
             try:
                 uf_target = text.split()[1].upper()
-                from .wab_data import get_state_from_grid
+                from .wab_data import get_state_from_grid, get_state_from_call
                 
                 found_msgs = []
                 count = 0
@@ -312,8 +312,16 @@ class MonitorBot:
                     state = get_state_from_grid(best_grid)
                     source = f"Grid {best_grid}"
                     
-                    # Strict Grid Only requested by user. 
-                    # Removed Call/ADIF fallback.
+                    if not state:
+                        call = qso.get("CALL", "")
+                        state = get_state_from_call(call)
+                        source = f"Call {call}"
+                        
+                    if not state:
+                         st = qso.get("STATE", "").upper().strip()
+                         if len(st)==2: 
+                             state = st
+                             source = "ADIF State"
 
                     if state == uf_target:
                         count += 1
