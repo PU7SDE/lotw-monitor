@@ -249,16 +249,24 @@ class MonitorBot:
                 self.send_message(chat_id, f"❌ Nenhum registro encontrado para `{call_to_check}`.")
 
         elif text.startswith("/forget "):
-            # Comando de DEBUG para testar alerta de novo grid
-            # Remove um grid da lista 'known_grids'
-            grid_to_forget = text[8:].strip().upper()
-            if grid_to_forget in self.storage.known_grids:
-                self.storage.known_grids.remove(grid_to_forget)
-                self.storage.data["known_grids"] = sorted(list(self.storage.known_grids))
+            # Remove um grid e força resync total
+            grid_for = text[8:].strip().upper()
+            known = self.storage.data.get("known_grids", [])
+            
+            if grid_for in known:
+                known.remove(grid_for)
+                self.storage.data["known_grids"] = sorted(known)
+                self.storage.last_qso_date = "1900-01-01" # Forçar novo download completo
                 self.storage.save()
-                self.send_message(chat_id, f"🗑️ Grid {grid_to_forget} esquecido. Rode /sync para detectá-lo como novo.")
+                self.send_message(chat_id, f"🗑️ Esqueci {grid_for}. O próximo /sync fará um download COMPLETO para achá-lo de novo.")
             else:
-                self.send_message(chat_id, f"⚠️ Grid {grid_to_forget} não estava na lista de confirmados.")
+                self.send_message(chat_id, f"⚠️ Grid {grid_for} não consta na lista.")
+
+        elif text.startswith("/testgrid "):
+            # Simula um alerta visual
+            grid_test = text[10:].strip().upper()
+            dummy_info = {grid_test: {"call": "TEST-CALL", "date": datetime.now().strftime("%Y%m%d")}}
+            self.notify_new_grids([grid_test], dummy_info)
 
     def start_polling(self):
         logger.info("Bot iniciado...")
