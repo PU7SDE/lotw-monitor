@@ -27,7 +27,8 @@ class MonitorBot:
     def send_photo(self, chat_id: str, photo_bytes: bytes, caption: str = ""):
         url = f"https://api.telegram.org/bot{self.token}/sendPhoto"
         data = {"chat_id": chat_id, "caption": caption}
-        files = {"photo": ("map.jpg", photo_bytes, "image/jpeg")}
+        # O gerador retorna PNG. É importante o nome/mime baterem.
+        files = {"photo": ("map.png", photo_bytes, "image/png")}
         try:
             r = requests.post(url, data=data, files=files, timeout=60)
             r.raise_for_status()
