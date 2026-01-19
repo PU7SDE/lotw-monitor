@@ -11,18 +11,13 @@ class MapGenerator:
     # Mapa Equiretangular (Plate Carrée) - Blue Marble Next Generation (NASA 8K)
     # Mapa Equiretangular (Plate Carrée) - Blue Marble Next Generation (NASA 8K)
     MAP_URL = "https://eoimages.gsfc.nasa.gov/images/imagerecords/57000/57752/land_shallow_topo_8192.tif"
-    # Font URL (Not used if system font found)
-    FONT_URL = None
+    # Font URL (Roboto Bold)
+    FONT_URL = "https://github.com/google/fonts/raw/main/ofl/roboto/Roboto-Bold.ttf"
     
     def __init__(self, cache_dir: Path):
         self.cache_dir = cache_dir
         self.map_path = cache_dir / "world_map_v2.tif" 
-        # Try specific Mac system font first
-        sys_font = Path("/System/Library/Fonts/Supplemental/Arial Bold.ttf")
-        if sys_font.exists():
-            self.font_path = sys_font
-        else:
-            self.font_path = cache_dir / "Arial-Bold.ttf"
+        self.font_path = cache_dir / "Roboto-Bold.ttf" # Force local cache for consistency
             
         self._ensure_resources()
         
@@ -41,10 +36,10 @@ class MapGenerator:
             except Exception as e:
                 logger.error(f"Erro ao baixar mapa: {e}")
 
-        # 2. Font (Download if not system and not cached)
+        # 2. Font (Download if not cached)
         if not self.font_path.exists() and self.FONT_URL:
              try:
-                logger.info("Baixando fonte...")
+                logger.info("Baixando fonte da web...")
                 r = requests.get(self.FONT_URL, timeout=30)
                 r.raise_for_status()
                 with open(self.font_path, 'wb') as f:
@@ -52,6 +47,51 @@ class MapGenerator:
                 logger.info("Fonte salva.")
              except Exception as e:
                 logger.error(f"Erro ao baixar fonte: {e}")
+
+    # ... methods ...
+
+    def generate(self, confirmed_grids: Set[str], worked_grids: Set[str], grid_labels: Dict[str, str] = None) -> bytes:
+        # ... logic ...
+                # Fonte
+                # Tamanho: Grid height ~23px. Fonte 10px * 2 linhas = 20px. 
+                # Margem 3px. Fica apertado mas cabe.
+                
+                try:
+                    font = ImageFont.truetype(str(self.font_path), 10)
+                except:
+                    font = ImageFont.load_default()
+
+                # 2. Desenha todos os grids
+                overlay = Image.new("RGBA", im.size, (255, 255, 255, 0))
+                draw = ImageDraw.Draw(overlay)
+                
+                # Cores
+                fill_color = (34, 197, 94, 60) # Verde do HTML, semitransparente
+                outline_color = (0, 0, 0, 255) # Borda preta
+                text_color = (255, 255, 255, 255) 
+                
+                for grid in confirmed_grids:
+                    lat_min, lon_min, lat_max, lon_max = self._grid_to_latlon(grid)
+                    if lat_min == 0 and lat_max == 0: continue
+                    
+                    x1, y_bottom = self._project(lat_min, lon_min, w, h)
+                    x2, y_top = self._project(lat_max, lon_max, w, h)
+                    
+                    # Draw rectangle
+                    draw.rectangle([x1, y_top, x2, y_bottom], fill=fill_color, outline=outline_color, width=2)
+                    
+                    # TEXT
+                    if grid_labels and grid in grid_labels:
+                        label_grid = grid
+                        label_call = grid_labels[grid]
+                        
+                        cx = (x1 + x2) / 2
+                        cy = (y_top + y_bottom) / 2
+                        
+                        # Offsets for 10px font (Tight fit)
+                        # Grid up 5px, Call down 5px
+                        draw.text((cx, cy - 5), label_grid, font=font, fill=text_color, anchor="mm", stroke_width=2, stroke_fill="black")
+                        draw.text((cx, cy + 5), label_call, font=font, fill=text_color, anchor="mm", stroke_width=2, stroke_fill="black")
 
     def _grid_to_latlon(self, grid: str) -> Tuple[float, float, float, float]:
         """Converte Grid 4 chars para Lat/Lon."""

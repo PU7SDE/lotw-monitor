@@ -19,6 +19,7 @@ Além de monitorar QSLs, o bot oferece ferramentas úteis para o dia-a-dia da op
 - **`/tle`**: Verifica se o arquivo de TLE do PU4ELT foi atualizado.
 - **`/sync`**: Sincronização inteligente (rápida/incremental).
 - **`/sync full`**: Força uma sincronização completa (baixa todo histórico).
+- **`/stats`**: Dashboard completo de estatísticas (Grids, Sats, DXCC, etc).
 - **`/help`**: Exibe a lista de comandos.
 
 ## 🛠️ Instalação

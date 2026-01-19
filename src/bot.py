@@ -364,6 +364,7 @@ class MonitorBot:
             "• `/grids` - Relatório estatístico dos grids confirmados.",
             "• `/map` - Mapa visual dos grids confirmados (Verde).",
             "• `/check <CALL>` - Verifica se você já trabalhou um indicativo.",
+            "• `/stats` - Dashboard completo de estatísticas.",
             "• `/sync` - Sincronização inteligente (rápida).",
             "• `/sync full` - Força download completo de todo histórico.",
             "• `/tle` - Verifica atualização dos elementos keplerianos.",
