@@ -8,13 +8,13 @@ from pathlib import Path
 logger = logging.getLogger(__name__)
 
 class MapGenerator:
-    # Mapa Equiretangular (Plate Carrée) - Blue Marble Next Generation
+    # Mapa Equiretangular (Plate Carrée) - Blue Marble Next Generation (8K)
     # X vai de -180 a 180, Y vai de 90 a -90
-    MAP_URL = "https://upload.wikimedia.org/wikipedia/commons/thumb/5/56/Blue_Marble_Next_Generation_%2B_topography_%2B_bathymetry.jpg/4096px-Blue_Marble_Next_Generation_%2B_topography_%2B_bathymetry.jpg"
+    MAP_URL = "https://eoimages.gsfc.nasa.gov/images/imagerecords/57000/57752/land_shallow_topo_8192.tif"
     
     def __init__(self, cache_dir: Path):
         self.cache_dir = cache_dir
-        self.map_path = cache_dir / "world_map.jpg"
+        self.map_path = cache_dir / "world_map.tif"
         self._ensure_map()
 
     def _ensure_map(self):
@@ -133,29 +133,36 @@ class MapGenerator:
                         found_any = True
                     
                     if found_any:
-                        # Margem de segurança (graus)
-                        padding = 15.0  
+                        # Limites da América Latina + Caribe (Default Minimum Crop)
+                        # North: 35, South: -60, West: -120, East: -25
+                        sa_min_lat = -60.0
+                        sa_max_lat = 35.0
+                        sa_min_lon = -120.0
+                        sa_max_lon = -25.0
+                        
+                        # Expande os bounds se os grids estiverem fora da AS
+                        final_min_lat = min(min_lat, sa_min_lat)
+                        final_max_lat = max(max_lat, sa_max_lat)
+                        final_min_lon = min(min_lon, sa_min_lon)
+                        final_max_lon = max(max_lon, sa_max_lon)
+                        
+                        # Margem de segurança (graus) - menor agora pois já temos uma visão ampla
+                        padding = 5.0
                         
                         # Aplica padding e clamp
-                        min_lat = max(-90.0, min_lat - padding)
-                        max_lat = min(90.0, max_lat + padding)
-                        min_lon = max(-180.0, min_lon - padding)
-                        max_lon = min(180.0, max_lon + padding)
+                        final_min_lat = max(-90.0, final_min_lat - padding)
+                        final_max_lat = min(90.0, final_max_lat + padding)
+                        final_min_lon = max(-180.0, final_min_lon - padding)
+                        final_max_lon = min(180.0, final_max_lon + padding)
                         
                         # Converte geo coords para pixel coords
-                        # Note que _project retorna X, Y. Y cresce para baixo.
-                        # min_lat (mais sul) -> Y maior (bottom)
-                        # max_lat (mais norte) -> Y menor (top)
-                        # min_lon (mais oeste) -> X menor (left)
-                        # max_lon (mais leste) -> X maior (right)
-                        
-                        left, bottom = self._project(min_lat, min_lon, w, h)
-                        right, top = self._project(max_lat, max_lon, w, h)
+                        left, bottom = self._project(final_min_lat, final_min_lon, w, h)
+                        right, top = self._project(final_max_lat, final_max_lon, w, h)
                         
                         # Ordena coordenadas para Crop (left, top, right, bottom)
                         crop_box = (int(left), int(top), int(right), int(bottom))
                         
-                        # Garante que box tenha tamanho mínimo 100x100 para não ficar pixelado demais
+                        # Garante que box tenha tamanho mínimo 100x100
                         if (crop_box[2] - crop_box[0] > 50) and (crop_box[3] - crop_box[1] > 50):
                              out = out.crop(crop_box)
 
