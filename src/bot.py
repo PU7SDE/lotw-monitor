@@ -28,9 +28,9 @@ class MonitorBot:
     # Teclado Principal Persistente
     MAIN_KEYBOARD = {
         "keyboard": [
-            [{"text": "/stats"}, {"text": "/map"}],
-            [{"text": "/sync"}, {"text": "/sync_full"}],
-            [{"text": "/grids"}, {"text": "/tle"}]
+            [{"text": "📊 Dashboard"}, {"text": "🗺️ Mapa"}],
+            [{"text": "🔄 Sync"}, {"text": "📥 Sync Full"}],
+            [{"text": "📋 Grids"}, {"text": "🛰️ TLEs"}]
         ],
         "resize_keyboard": True,
         "persistent": True
@@ -219,11 +219,11 @@ class MonitorBot:
         if chat_id != self.allowed_chat_id:
             return
 
-        if text == "/help" or text == "/start":
+        if text == "/help" or text == "/start" or text == "❓ Ajuda":
             self.send_help(chat_id)
             return
 
-        elif text == "/grids":
+        elif text == "/grids" or text == "📋 Grids":
             # Vamos manter o /grids como resumo simples ou redirecionar?
             # O user pediu "/stats" baseado no HTML.
             stats = self.storage.get_stats()
@@ -234,7 +234,7 @@ class MonitorBot:
             lines.append("Use `/stats` para ver o dashboard completo.")
             self.send_message(chat_id, "\n".join(lines))
 
-        elif text == "/stats":
+        elif text == "/stats" or text == "📊 Dashboard":
             d = self.storage.get_dashboard_stats()
             
             # Formata mensagem estilo Dashboard
@@ -267,11 +267,11 @@ class MonitorBot:
             
             self.send_message(chat_id, "\n".join(msg))
 
-        elif text == "/sync" or text.startswith("/sync ") or text == "/sync_full":
+        elif text == "/sync" or text.startswith("/sync ") or text == "/sync_full" or text == "🔄 Sync" or text == "📥 Sync Full":
             # Parse arguments
             args = text.split()
             force_full = False
-            if (len(args) > 1 and args[1].lower() == "full") or (text == "/sync_full"):
+            if (len(args) > 1 and args[1].lower() == "full") or (text == "/sync_full") or (text == "📥 Sync Full"):
                 force_full = True
             
             mode_str = "COMPLETA (Full Download)" if force_full else "Inteligente (Smart Sync)"
@@ -280,7 +280,7 @@ class MonitorBot:
             t = threading.Thread(target=self.run_check_job, args=(True, chat_id, force_full)) 
             t.start()
             
-        elif text == "/map":
+        elif text == "/map" or text == "🗺️ Mapa":
              self.send_message(chat_id, "🗺️ Gerando mapa...")
              # Gerar em thread para nao bloquear? Map é rápido com pillow, mas download da base pode demorar na 1a vez.
              # Vamos fazer inline por simplificidade, já que download é cacheado.
@@ -302,7 +302,7 @@ class MonitorBot:
                  logger.exception("Exceção ao gerar mapa")
                  self.send_message(chat_id, f"❌ Erro ao gerar o mapa: {e}")
 
-        elif text == "/tle":
+        elif text == "/tle" or text == "🛰️ TLEs":
             changed = self.tle_mon.check_update()
             if changed:
                 self.send_message(chat_id, "✅ TLEs estavam desatualizados e foram renovados agora.")
