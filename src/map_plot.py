@@ -8,13 +8,13 @@ from pathlib import Path
 logger = logging.getLogger(__name__)
 
 class MapGenerator:
-    # Mapa Equiretangular (Plate Carrée) - Blue Marble Next Generation (21K - Ultra High Res)
+    # Mapa Equiretangular (Plate Carrée) - Blue Marble Next Generation (NASA 8K)
     # X vai de -180 a 180, Y vai de 90 a -90
-    MAP_URL = "https://upload.wikimedia.org/wikipedia/commons/b/b2/Blue_Marble_Next_Generation_%2B_topography_%2B_bathymetry.jpg"
+    MAP_URL = "https://eoimages.gsfc.nasa.gov/images/imagerecords/57000/57752/land_shallow_topo_8192.tif"
     
     def __init__(self, cache_dir: Path):
         self.cache_dir = cache_dir
-        self.map_path = cache_dir / "world_map_21k.jpg"
+        self.map_path = cache_dir / "world_map.tif"
         self._ensure_map()
 
     def _ensure_map(self):
