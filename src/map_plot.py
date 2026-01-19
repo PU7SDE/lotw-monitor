@@ -10,11 +10,11 @@ logger = logging.getLogger(__name__)
 class MapGenerator:
     # Mapa Equiretangular (Plate Carrée) - Blue Marble Next Generation
     # X vai de -180 a 180, Y vai de 90 a -90
-    MAP_URL = "https://upload.wikimedia.org/wikipedia/commons/thumb/c/cd/Land_ocean_ice_8192.png/4096px-Land_ocean_ice_8192.png"
+    MAP_URL = "https://upload.wikimedia.org/wikipedia/commons/thumb/5/56/Blue_Marble_Next_Generation_%2B_topography_%2B_bathymetry.jpg/4096px-Blue_Marble_Next_Generation_%2B_topography_%2B_bathymetry.jpg"
     
     def __init__(self, cache_dir: Path):
         self.cache_dir = cache_dir
-        self.map_path = cache_dir / "world_map.png"
+        self.map_path = cache_dir / "world_map.jpg"
         self._ensure_map()
 
     def _ensure_map(self):
