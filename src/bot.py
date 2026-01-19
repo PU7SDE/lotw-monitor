@@ -267,6 +267,7 @@ class MonitorBot:
             # WAB List (Brazil States)
             msg.append("")
             msg.append("🇧🇷 *Estados Confirmados (WAB):*")
+            sorted_wab = sorted(d.get('wab_breakdown', {}).items(), key=lambda x: x[1], reverse=True)
             if sorted_wab:
                 # Format: SP (12), RJ (5), ...
                 # Compact format
