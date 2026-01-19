@@ -15,35 +15,27 @@ class LoTWClient:
 
     def fetch_adif(self, since: Optional[str] = None) -> str:
         """
-        Baixa ADIF de confirmações (QSLs).
+        Baixa ADIF de confirmações (QSLs) - Usando parametros do user.
         :param since: Data YYYY-MM-DD para trazer apenas novos.
         """
         params = {
             "login": self.username,
             "password": self.password,
             "qso_query": "1",
-            "qso_qsl": "no", # Traga todos (yes traria só confirmados)
+            "qso_qsl": "yes", # SIM, queremos apenas confirmados (user request rule)
             "qso_qsldetail": "yes",
         }
         
-        # Se 'since' for None, traz tudo.
-        # Se for incremental, LoTW filtra pela data de upload/QSL.
-
+        # User requested logic:
+        # if since: params["qso_qslsince"] = since
+        # else: params["qso_qslsince"] = "1900-01-01"
         
         if since:
             params["qso_qslsince"] = since
-            params["qso_qsorxsince"] = since
+        else:
+            params["qso_qslsince"] = "1900-01-01"
         
-        # Se since is None, não enviamos qso_qslsince, o que força o LoTW a trazer tudo (Default)
-
-        # IMPORTANTE: Para pegar "trabalhados" (worked), qso_qsl precisa ser "no"
-        # (significa "ignore QSL status", ou seja, traga todos). 
-        # Mas queremos QSL details se houver.
-        
-        # O LoTWReport é meio chato. Se qso_qsl='no', ele lista tudo.
-        # A gente filtra no client o que é confirmed.
-        
-        logger.info(f"Baixando ADIF do LoTW (since={params.get('qso_qslsince', 'ALL')})...")
+        logger.info(f"Baixando ADIF do LoTW (since={params['qso_qslsince']})...")
         try:
             resp = requests.get(self.LOTW_URL, params=params, timeout=120)  # timeout maior pois pode ser grande
             resp.raise_for_status()
