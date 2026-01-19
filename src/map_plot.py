@@ -14,7 +14,7 @@ class MapGenerator:
     
     def __init__(self, cache_dir: Path):
         self.cache_dir = cache_dir
-        self.map_path = cache_dir / "world_map.jpg"
+        self.map_path = cache_dir / "world_map.png"
         self._ensure_map()
 
     def _ensure_map(self):
