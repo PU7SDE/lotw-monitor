@@ -74,6 +74,16 @@ class MonitorBot:
             lines.append(f"• `{grid}` com `{call}` ({date})")
 
         self.send_message(self.allowed_chat_id, "\n".join(lines))
+        
+        # Envia o mapa atualizado automaticamente
+        try:
+             confirmed = self.storage.get_confirmed_grids()
+             # Passamos worked vazio pois removemos a visualização
+             img_bytes = self.map_gen.generate(confirmed, set())
+             if img_bytes:
+                 self.send_photo(self.allowed_chat_id, img_bytes, "🗺️ Mapa atualizado com os novos grids!")
+        except Exception as e:
+            logger.error(f"Erro ao enviar mapa automático: {e}")
 
     def run_check_job(self, manual=False, chat_id=None):
         """

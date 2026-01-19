@@ -87,23 +87,11 @@ class MapGenerator:
                 
                 w, h = im.size
                 
-                # Primeiro Worked (Red), pois Confirmed sobrescreve
-                # (Se for confirmado, já foi trabalhado, então a interseção seria pintada 2x)
-                # Vamos filtrar: worked only = worked - confirmed
-                only_worked = worked_grids - confirmed_grids
+                # Primeiro Worked (Red) - REMOVIDO a pedido.
+                # Apenas Confirmed (Green) serão desenhados.
                 
-                for grid in only_worked:
-                    lat_min, lon_min, lat_max, lon_max = self._grid_to_latlon(grid)
-                    x1, y1 = self._project(lat_min, lon_min, w, h) # Bottom Left (lat min is bottom) -> wait, Y inverts
-                    # lat_min -> Y maior (embaixo). lat_max -> Y menor (em cima)
-                    # _project já inverte Y.
-                    
-                    x1, y_bottom = self._project(lat_min, lon_min, w, h)
-                    x2, y_top = self._project(lat_max, lon_max, w, h)
-                    
-                    # Rectangle needs (x0, y0, x1, y1) where 0 is top-left
-                    draw.rectangle([x1, y_top, x2, y_bottom], fill=(255, 0, 0, 128), outline=(200, 0, 0, 200))
-
+                # Loop de worked removido.
+                
                 for grid in confirmed_grids:
                     lat_min, lon_min, lat_max, lon_max = self._grid_to_latlon(grid)
                     x1, y_bottom = self._project(lat_min, lon_min, w, h)
@@ -115,7 +103,8 @@ class MapGenerator:
                 out = Image.alpha_composite(im, overlay)
                 
                 # --- AUTO CROP ---
-                all_grids = confirmed_grids.union(worked_grids)
+                # Apenas grids confirmados para o crop!
+                all_grids = confirmed_grids
                 if all_grids:
                     min_lat, max_lat = 90.0, -90.0
                     min_lon, max_lon = 180.0, -180.0
