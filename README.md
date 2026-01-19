@@ -14,11 +14,12 @@ Além de monitorar QSLs, o bot oferece ferramentas úteis para o dia-a-dia da op
 ## 🚀 Funcionalidades
 
 - **`/grids`**: Exibe relatório estatístico dos grids confirmados.
-- **`/map`**: Gera um mapa-múndi focado na sua região de atuação.
-    - 🟩 **Verde**: Grid Confirmado.
-- **`/check <CALL>`**: Verifica rapidamente se você já trabalhou um determinado indicativo.
+- **`/map`**: Mapa visual. 🟩 **Verde**: Confirmado. 🔲 **Borda**: Gridmaster.
+- **`/check <CALL>`**: Verifica rapidamente se você já trabalhou um indicativo.
 - **`/tle`**: Verifica se o arquivo de TLE do PU4ELT foi atualizado.
-- **`/sync`**: Força uma sincronização manual com o LoTW.
+- **`/sync`**: Sincronização inteligente (rápida/incremental).
+- **`/sync full`**: Força uma sincronização completa (baixa todo histórico).
+- **`/help`**: Exibe a lista de comandos.
 
 ## 🛠️ Instalação
 
@@ -36,18 +37,14 @@ Além de monitorar QSLs, o bot oferece ferramentas úteis para o dia-a-dia da op
    ```
 
 
-2. **Crie um ambiente virtual (Obrigatório em VPS/Linux recentes):**
-   ```bash
-   python3 -m venv venv
-   source venv/bin/activate
-   ```
 
-3. **Instale as dependências**:
+2. **Instale as dependências**:
    ```bash
    pip install -r requirements.txt
    ```
+   *(Nota: Se der erro de permissão ou ambiente gerenciado, tente usar `sudo pip install -r requirements.txt --break-system-packages`)*
 
-4. **Configure as credenciais**:
+3. **Configure as credenciais**:
    - Renomeie o arquivo de exemplo:
      ```bash
      cp .env.example .env

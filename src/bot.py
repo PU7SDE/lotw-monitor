@@ -201,6 +201,10 @@ class MonitorBot:
         if chat_id != self.allowed_chat_id:
             return
 
+        if text == "/help" or text == "/start":
+            self.send_help(chat_id)
+            return
+
         if text == "/grids":
             stats = self.storage.get_stats()
             if not stats:
@@ -329,8 +333,33 @@ class MonitorBot:
                 logger.error(f"Erro teste: {e}")
                 self.send_message(chat_id, f"❌ Erro: {e}")
 
+    def send_help(self, chat_id: str):
+        """Envia mensagem de ajuda com os comandos disponíveis."""
+        lines = [
+            "🤖 *LoTW Monitor Bot - Ajuda*",
+            "",
+            "Comandos disponíveis:",
+            "• `/grids` - Relatório estatístico dos grids confirmados.",
+            "• `/map` - Mapa visual dos grids confirmados (Verde).",
+            "• `/check <CALL>` - Verifica se você já trabalhou um indicativo.",
+            "• `/sync` - Sincronização inteligente (rápida).",
+            "• `/sync full` - Força download completo de todo histórico.",
+            "• `/tle` - Verifica atualização dos elementos keplerianos.",
+            "• `/forget <GRID>` - Remove um grid da lista (para forçar re-sync).",
+            "• `/help` - Mostra esta mensagem."
+        ]
+        self.send_message(chat_id, "\n".join(lines))
+
     def start_polling(self):
         logger.info("Bot iniciado...")
+        
+        # Envia mensagem de startup
+        try:
+            self.send_message(self.allowed_chat_id, "🤖 *Bot Iniciado!* Pronto para monitorar.")
+            self.send_help(self.allowed_chat_id)
+        except Exception as e:
+            logger.error(f"Erro ao enviar mensagem de startup: {e}")
+
         offset = None
         url = f"https://api.telegram.org/bot{self.token}/getUpdates"
         
