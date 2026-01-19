@@ -94,7 +94,7 @@ class MonitorBot:
             
             # Se a última data for muito antiga (padrão), ele pega tudo.
             # Vamos pegar tudo se last_date for o padrão, senão pega incremental.
-            qsos = self.client.get_new_confirmations(since=last_date if last_date != "1900-01-01" else None)
+            qsos = self.client.get_qsos(since=last_date if last_date != "1900-01-01" else None)
             
             if not qsos:
                 if manual and chat_id:
