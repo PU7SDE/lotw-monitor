@@ -32,6 +32,7 @@ class LoTWClient:
         
         if since:
             params["qso_qslsince"] = since
+            params["qso_qsorxsince"] = since
         
         # Se since is None, não enviamos qso_qslsince, o que força o LoTW a trazer tudo (Default)
 
@@ -53,6 +54,7 @@ class LoTWClient:
         text = resp.text
         if "<eoh>" not in text.lower():
             # Erro de autenticação ou serviço fora do ar muitas vezes retorna HTML
+            logger.error(f"Resposta inválida recebida: {text[:500]}...")
             raise RuntimeError("Resposta do LoTW inválida (não parece ser ADIF). Verifique login/senha.")
             
         return text

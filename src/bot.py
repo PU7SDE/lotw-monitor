@@ -103,9 +103,9 @@ class MonitorBot:
             # Se precisar de FULL SYNC, o usuário pode deletar o state.json
             last_date = self.storage.last_qso_date
             
-            # Se a última data for muito antiga (padrão), ele pega tudo.
-            # Vamos pegar tudo se last_date for o padrão, senão pega incremental.
-            qsos = self.client.get_qsos(since=last_date if last_date != "1900-01-01" else None)
+            # Se a última data for muito antiga (padrão), enviamos ela explicitamente "1900-01-01"
+            # para garantir que o LoTW traga tudo (evitando default do sistema)
+            qsos = self.client.get_qsos(since=last_date)
             
             if not qsos:
                 if manual and chat_id:
