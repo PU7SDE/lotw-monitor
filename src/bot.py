@@ -108,8 +108,11 @@ class MonitorBot:
             
             if not qsos:
                 if manual and chat_id:
-                    self.send_message(chat_id, "✅ Nenhuma nova confirmação encontrada no LoTW.")
+                    self.send_message(chat_id, f"✅ Sincronização concluída. 0 QSOs retornados pelo LoTW (Desde: {last_date}).")
                 return
+
+            if manual and chat_id:
+                 self.send_message(chat_id, f"📥 Baixados {len(qsos)} QSOs do LoTW. Processando...")
 
             # Atualiza data do último QSO para a próxima vez
             # Encontra a data mais recente nos QSOs baixados

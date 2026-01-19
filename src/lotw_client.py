@@ -32,8 +32,8 @@ class LoTWClient:
         
         if since:
             params["qso_qslsince"] = since
-        else:
-            params["qso_qslsince"] = "1900-01-01"
+        
+        # Se since is None, não enviamos qso_qslsince, o que força o LoTW a trazer tudo (Default)
 
         # IMPORTANTE: Para pegar "trabalhados" (worked), qso_qsl precisa ser "no"
         # (significa "ignore QSL status", ou seja, traga todos). 
