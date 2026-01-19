@@ -99,44 +99,63 @@ class MonitorBot:
 
         try:
             logger.info(f"Iniciando check job (manual={manual}, force_full={force_full})...")
-            # 1. Determina data de corte (incremental)
-            # Se for manual, pode querer forçar tudo, mas para eficiência vamos usar incremental seguro
-            # Se precisar de FULL SYNC, o usuário pode deletar o state.json
-            last_date = self.storage.last_qso_date
+            
+            # --- Lógica Smart Sync ---
+            # 1. Determina data de corte.
+            # Se force_full = True, usa 1900-01-01.
+            # Se force_full = False, usa last_sync_date com margem de segurança (1 dia).
+            
+            import datetime as dt_module
+            from datetime import timedelta
             
             if force_full:
-                last_date = "1900-01-01"
+                since_date = "1900-01-01"
+                logger.info("Modo FORCE FULL ativado.")
+            else:
+                last_sync = self.storage.last_sync_date
+                if last_sync == "1900-01-01":
+                    since_date = "1900-01-01" # Nunca rodou, então FULL
+                    logger.info("Primeira execução detectada: Modo FULL.")
+                else:
+                    # Margem de segurança: volta 1 dia para garantir (overlap)
+                    # last_sync é YYYY-MM-DD
+                    try:
+                        ls_dt = datetime.strptime(last_sync, "%Y-%m-%d")
+                        safe_dt = ls_dt - timedelta(days=1)
+                        since_date = safe_dt.strftime("%Y-%m-%d")
+                        logger.info(f"Modo INCREMENTAL. Since: {since_date} (Last success: {last_sync})")
+                    except:
+                        since_date = "1900-01-01" # Fallback se parse falhar
             
-            # Se a última data for muito antiga (padrão), enviamos ela explicitamente "1900-01-01"
-            # para garantir que o LoTW traga tudo (evitando default do sistema)
-            qsos = self.client.get_qsos(since=last_date)
+            qsos = self.client.get_qsos(since=since_date)
             
             if not qsos:
                 if manual and chat_id:
-                    self.send_message(chat_id, f"✅ Sincronização concluída. 0 QSOs retornados pelo LoTW (Desde: {last_date}).")
+                    self.send_message(chat_id, f"✅ Sincronização concluída. 0 novos registros desde {since_date}.")
+                
+                # Mesmo sem novos QSOs, atualizamos o last_sync_date para hoje,
+                # para que amanhã a busca seja rápida.
+                self.storage.last_sync_date = datetime.now().strftime("%Y-%m-%d")
+                self.storage.save()
                 return
 
             if manual and chat_id:
-                 self.send_message(chat_id, f"📥 Baixados {len(qsos)} QSOs do LoTW. Processando...")
+                 self.send_message(chat_id, f"📥 Analisando {len(qsos)} registros do LoTW...")
 
-            # Atualiza data do último QSO para a próxima vez
-            # Encontra a data mais recente nos QSOs baixados
-            max_date = last_date
+            # 2. Processa e salva no Storage
+            new_grids_found = self.storage.merge_qsos(qsos)
+            
+            # Atualiza last_sync_date para HOJE (sucesso)
+            # Não usamos max_date do QSO, pois queremos saber quando RODAMOS o check.
+            self.storage.last_sync_date = datetime.now().strftime("%Y-%m-%d")
+            
+            # (Opcional) Mantemos last_qso_date para estatísticas, mas não para controle de sync
+            max_qso_date = "1900-01-01"
             for q in qsos:
                 d = q.get("QSO_DATE", "")
-                if d > max_date:
-                    max_date = d
+                if d > max_qso_date: max_qso_date = d
+            self.storage.last_qso_date = max_qso_date
             
-            # 2. Processa e salva no Storage
-            # Precisamos extrair infos para o alerta ANTES de salvar (que já mescla)
-            # O storage.merge_qsos retorna a lista de grids que ERAM desconhecidos
-            
-            # Pequeno hack: precisamos mapear grid -> call/date para o alerta
-            # O Storage não guarda "quem" deu o grid novo explicitamente no return
-            # Então vamos fazer um pré-processamento rápido
-            
-            new_grids_found = self.storage.merge_qsos(qsos)
-            self.storage.last_qso_date = max_date
             self.storage.save()
             
             # Checa TLE
@@ -205,9 +224,10 @@ class MonitorBot:
             self.send_message(chat_id, full_msg)
 
         elif text == "/sync" or text.startswith("/sync "):
-            self.send_message(chat_id, "🔄 Iniciando sincronização COMPLETA (pode demorar)...")
-            # User requested /sync to be FULL by default
-            t = threading.Thread(target=self.run_check_job, args=(True, chat_id, True)) # force_full=True
+            # Smart Sync: Se tivermos data de last_sync, é incremental. Se não, é full.
+            # O run_check_job decide baseado no estado.
+            self.send_message(chat_id, "🔄 Iniciando sincronização inteligente (Smart Sync)...")
+            t = threading.Thread(target=self.run_check_job, args=(True, chat_id, False)) 
             t.start()
             
         elif text == "/map":

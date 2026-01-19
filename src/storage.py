@@ -40,6 +40,15 @@ class Storage:
     @last_qso_date.setter
     def last_qso_date(self, value: str):
         self.data["last_qso_date"] = value
+        
+    @property
+    def last_sync_date(self) -> str:
+        """Data da última sincronização bem sucedida no formato YYYY-MM-DD"""
+        return self.data.get("last_sync_date", "1900-01-01")
+
+    @last_sync_date.setter
+    def last_sync_date(self, value: str):
+        self.data["last_sync_date"] = value
 
     @property
     def known_grids(self) -> Set[str]:
