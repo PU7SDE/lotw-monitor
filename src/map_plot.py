@@ -157,8 +157,16 @@ class MapGenerator:
                              out = out.crop(crop_box)
 
                 
-                # Converter para RGB (remover alpha) e salvar em buffer
+                # Converter para RGB
                 out = out.convert("RGB")
+                
+                # Resize se exceder limites do Telegram
+                # Limite: width + height <= 10000. 
+                # Vamos limitar max dimension a 3840 (4K UHD) para segurança e performance.
+                max_dim = 3840
+                if out.width > max_dim or out.height > max_dim:
+                    out.thumbnail((max_dim, max_dim), Image.Resampling.LANCZOS)
+                
                 buf = io.BytesIO()
                 out.save(buf, format="PNG")
                 return buf.getvalue()
