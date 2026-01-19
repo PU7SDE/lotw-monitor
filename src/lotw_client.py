@@ -24,6 +24,8 @@ class LoTWClient:
             "qso_query": "1",
             "qso_qsl": "yes", # SIM, queremos apenas confirmados (user request rule)
             "qso_qsldetail": "yes",
+            "qso_mydetail": "yes", # Necessário para pegar my_gridsquare (distance calc)
+            "qso_owncall": self.username,
         }
         
         # User requested logic:

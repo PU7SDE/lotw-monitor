@@ -205,27 +205,49 @@ class MonitorBot:
             self.send_help(chat_id)
             return
 
-        if text == "/grids":
+        elif text == "/grids":
+            # Vamos manter o /grids como resumo simples ou redirecionar?
+            # O user pediu "/stats" baseado no HTML.
             stats = self.storage.get_stats()
             if not stats:
-                self.send_message(chat_id, "📡 Nenhum grid registrado ainda.")
-                return
+                 self.send_message(chat_id, "📡 Nenhum grid registrado ainda.")
+                 return
+            lines = [f"📡 *Resumo Grids* ({len(stats)})", ""]
+            lines.append("Use `/stats` para ver o dashboard completo.")
+            self.send_message(chat_id, "\n".join(lines))
+
+        elif text == "/stats":
+            d = self.storage.get_dashboard_stats()
             
-            # Formata msg
-            lines = [f"📡 *Resumo Satélite* ({len(stats)} grids)", ""]
-            for g in sorted(stats.keys()):
-                info = stats[g]
-                count = info["count"]
-                # Pega até 3 calls de exemplo
-                calls = list(info["calls"])[:3] 
-                calls_str = ", ".join(calls)
-                lines.append(f"*{g}*: {count} QSOs ({calls_str}...)")
+            # Formata mensagem estilo Dashboard
+            msg = [
+                "📊 *Satellite Grid Dashboard* 🛰️",
+                "",
+                f"✅ *Confirmados:* `{d['total_confirmed']}` QSOs",
+                f"🗺️ *Grids:* `{d['total_grids']}` (VUCC: {d['total_grids']}/100)",
+                f"🛰️ *Satélites:* `{d['total_sats']}`",
+                f"📏 *Max DX:* `{d['max_distance']} km`",
+                "",
+                f"🌍 *DXCC:* `{d['dxcc_count']}`  •  *CQ:* `{d['cq_count']}`  •  *ITU:* `{d['itu_count']}`",
+                "",
+                "🏆 *Top Grid Hunters:*"
+            ]
             
-            full_msg = "\n".join(lines)
-            if len(full_msg) > 4000:
-                full_msg = full_msg[:3900] + "\n...(truncado)"
+            if d['top_hunters']:
+                for idx, h in enumerate(d['top_hunters'], 1):
+                    msg.append(f"{idx}. *{h['call']}* - {h['count']} grids")
+            else:
+                msg.append("(Sem dados)")
             
-            self.send_message(chat_id, full_msg)
+            # Breakdowns simplificados (Top 3 Sats)
+            msg.append("")
+            msg.append("📡 *Top Satélites:*")
+            sorted_sats = sorted(d['sats_breakdown'].items(), key=lambda x: x[1], reverse=True)[:3]
+            if sorted_sats:
+                for s, c in sorted_sats:
+                    msg.append(f"• {s}: {c} QSOs")
+            
+            self.send_message(chat_id, "\n".join(msg))
 
         elif text == "/sync" or text.startswith("/sync "):
             # Smart Sync: Se tivermos data de last_sync, é incremental. Se não, é full.

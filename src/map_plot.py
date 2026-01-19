@@ -95,35 +95,33 @@ class MapGenerator:
                     # Mas o usuário dá zoom.
                     # Vamos tentar 24px (fica maior que o quadrado 'físico', mas no zoom ok? Não, vai sobrepor)
                     # Ah, espere.
-                    # 8192px / 360 = 22.75 px por grau.
-                    # O grid 4 chars tem 1 grau de altura.
-                    # Então cada quadrado tem ~23px de altura.
-                    # Impossível escrever texto legível (GRID + CALL) em 23px de altura.
-                    # SOLUÇÃO: Upscale da região recortada ou desenhar no full map com fonte minúscula?
-                    # Se desenharmos no full map 8k em 23px, vai ficar ilegível se não der zoom absurdo, mas a imagem final é cropada?
-                    # Se cropamos, mantemos a resolução original.
-                    # Se fizermos crop de 20x20 graus -> 450x450px.
-                    # 20 grids de altura.
-                    # O "Gridmaster" map geralmente é alta definição.
-                    # Talvez o usuário queira ver APENAS os grids novos ou região?
+                    # 8192px / 180 deg = ~45.5 px por grau de latitude.
+                    # Grid 4 chars = 1 deg altura.
+                    # Temos ~45px de altura vertical disponivel.
+                    # Texto tamanho 10 fica ~10-12px altura real. 2 linhas = 24px.
+                    # Com margem, 12px é um bom tamanho seguro. 
+                    # Se usarmos sistema Arial Bold, ele renderiza bem.
                     
-                    # Vamos TENTAR fazer o texto caber.
-                    # Fonte tamanho 8.
-                    # Ou desenhar overflow?
-                    
-                    font = ImageFont.truetype(str(self.font_path), 8)
-                except:
-                    font = ImageFont.load_default()
+                    try:
+                        font = ImageFont.truetype(str(self.font_path), 12)
+                    except:
+                        font = ImageFont.load_default()
 
                 # 2. Desenha todos os grids
                 overlay = Image.new("RGBA", im.size, (255, 255, 255, 0))
                 draw = ImageDraw.Draw(overlay)
                 
-                # Cor: Verde claro semitransparente para preenchimento
-                # Borda: Preta fina (Gridmaster style)
-                fill_color = (0, 255, 0, 80) # Mais transparente para ver relevo? Ou sólido? Gridmaster é "amarelo" geralmente. Vamos de verde monitor padrão.
-                outline_color = (0, 0, 0, 255)
-                text_color = (0, 0, 0, 255)
+                # Cor: Verde "Matrix" para alto contraste no mapa escuro, ou Azul Dash?
+                # O HTML usa Azul (#2563eb). No mapa escuro (oceano), azul some.
+                # Vamos manter o "Gridmaster" request original: Amarelo? Ou Verde?
+                # Vamos de Amarelo Ouro (Gold) para destaque total?
+                # Ou Cyan? Cyan (#06b6d4) funciona bem em fundo escuro.
+                # Vamos usar CYAN para modernizar (match HTML secondary colors?)
+                # HTML usa accent #22c55e (verde).
+                # Vamos de Verde Neon para contraste máximo.
+                fill_color = (34, 197, 94, 60) # Verde do HTML, semitransparente
+                outline_color = (0, 0, 0, 255) # Borda preta
+                text_color = (255, 255, 255, 255) # Texto BRANCO com sombra (outline manual) para leitura no mapa
                 
                 for grid in confirmed_grids:
                     lat_min, lon_min, lat_max, lon_max = self._grid_to_latlon(grid)
@@ -132,28 +130,21 @@ class MapGenerator:
                     x1, y_bottom = self._project(lat_min, lon_min, w, h)
                     x2, y_top = self._project(lat_max, lon_max, w, h)
                     
-                    # Gridmaster style: BORDER
                     # Draw rectangle
-                    draw.rectangle([x1, y_top, x2, y_bottom], fill=fill_color, outline=outline_color, width=1)
+                    draw.rectangle([x1, y_top, x2, y_bottom], fill=fill_color, outline=outline_color, width=2)
                     
-                    # TEXT
+                    # TEXT with Stroke for readability
                     if grid_labels and grid in grid_labels:
                         label_grid = grid
                         label_call = grid_labels[grid]
                         
-                        # Calculate text positions (centered)
-                        # We have height = y_bottom - y_top (~22px)
-                        # We can put Grid top, Call bottom.
-                        
-                        # grid text
-                        # draw.textbbox is better but lets guess centered
                         cx = (x1 + x2) / 2
                         cy = (y_top + y_bottom) / 2
                         
-                        # Draw Grid (Upper half) - Offset -6px
-                        draw.text((cx, cy - 6), label_grid, font=font, fill=text_color, anchor="mm")
-                        # Draw Call (Lower half) - Offset +6px
-                        draw.text((cx, cy + 6), label_call, font=font, fill=text_color, anchor="mm")
+                        # Offsets for 12px font
+                        # Grid up 8px, Call down 8px
+                        draw.text((cx, cy - 8), label_grid, font=font, fill=text_color, anchor="mm", stroke_width=2, stroke_fill="black")
+                        draw.text((cx, cy + 8), label_call, font=font, fill=text_color, anchor="mm", stroke_width=2, stroke_fill="black")
 
                 out = Image.alpha_composite(im, overlay)
                 out = out.convert("RGB")

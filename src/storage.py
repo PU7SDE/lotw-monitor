@@ -142,28 +142,131 @@ class Storage:
                 stats[g]["calls"].add(qso.get("CALL", "UNKNOWN"))
         return stats
 
-    def get_grid_labels(self) -> Dict[str, str]:
+    def get_dashboard_stats(self) -> Dict[str, Any]:
         """
-        Retorna um dicionário {GRID: CALL} para os grids confirmados.
-        Escolhe arbitrariamente um call caso haja múltiplos (ex: o mais recente processado).
+        Retorna estatísticas detalhadas do dashboard (similar ao HTML fornecido).
+        Calcula: Total QSOs, Grids, Sats, DXCC, CQ, ITU, Max Distance, Hunters.
         """
-        labels = {}
-        # Itera cache para encontrar confirmados
-        # Ordenamos por data para tentar pegar o mais recente? O cache não é ordenado garatido.
-        # Mas podemos iterar e sobrescrever.
+        import math
+
+        stats = {
+            "total_confirmed": 0,
+            "total_grids": 0,
+            "total_sats": 0,
+            "max_distance": 0,
+            "dxcc_count": 0,
+            "cq_count": 0,
+            "itu_count": 0,
+            "vucc_status": 0,
+            "top_hunters": [], # Lista de (Call, Count, GridsStr)
+            "sats_breakdown": {}, # Sat -> Count
+            "dxcc_breakdown": {}  # Country -> Count
+        }
+
+        unique_grids = set()
+        unique_sats = set()
+        unique_dxcc = set()
+        unique_cq = set()
+        unique_itu = set()
+        hunter_grids = {} # Call -> Set[Grid]
         
-        # Ordenar QSOs por data (opcional, mas bom para consistência)
-        qsos = list(self.data.get("qso_cache", {}).values())
-        # Sort by Date + Time
-        qsos.sort(key=lambda x: (x.get("QSO_DATE", ""), x.get("TIME_ON", "")))
+        # Helper de Distância (Haversine)
+        def calc_dist(lat1, lon1, lat2, lon2):
+            R = 6371
+            dLat = (lat2 - lat1) * math.pi / 180
+            dLon = (lon2 - lon1) * math.pi / 180
+            a = math.sin(dLat/2) * math.sin(dLat/2) + \
+                math.cos(lat1 * math.pi / 180) * math.cos(lat2 * math.pi / 180) * \
+                math.sin(dLon/2) * math.sin(dLon/2)
+            c = 2 * math.atan2(math.sqrt(a), math.sqrt(1-a))
+            return int(R * c)
+
+        # Helper Grid -> LatLon Center
+        def grid_to_center(grid):
+            if not grid or len(grid) < 4: return None
+            g = grid.upper().strip()
+            # Maidenhead simplificado (apenas 4 chars)
+            # Longitude: (Field - 'A') * 20 - 180 + (Square) * 2
+            # Latitude: (Field - 'A') * 10 - 90 + (Square) * 1
+            # Center: +1 lon, +0.5 lat
+            
+            A = ord('A')
+            lon_field = (ord(g[0]) - A) * 20 - 180
+            lat_field = (ord(g[1]) - A) * 10 - 90
+            lon_sq = int(g[2]) * 2
+            lat_sq = int(g[3]) * 1
+            
+            lat_center = lat_field + lat_sq + 0.5
+            lon_center = lon_field + lon_sq + 1.0
+            return (lat_center, lon_center)
+
+        # Iterar QSOs
+        for qso in self.data.get("qso_cache", {}).values():
+             is_confirmed = (qso.get("QSL_RCVD", "").upper() == "Y")
+             
+             # HTML filtra por SAT e Confirmed? 
+             # O código HTML processa "prop_mode=SAT".
+             prop = qso.get("PROP_MODE", "").upper()
+             sat_name = qso.get("SAT_NAME", "").upper()
+             
+             if prop != "SAT" and not sat_name:
+                 continue
+                 
+             if not is_confirmed:
+                 continue
+
+             stats["total_confirmed"] += 1
+             
+             # Grids do QSO
+             qs_grids = self._extract_grids(qso)
+             unique_grids.update(qs_grids)
+             
+             # Sat
+             if sat_name:
+                 unique_sats.add(sat_name)
+                 stats["sats_breakdown"][sat_name] = stats["sats_breakdown"].get(sat_name, 0) + 1
+             
+             # DXCC/CQ/ITU
+             dxcc = qso.get("COUNTRY", "").upper()
+             if dxcc: 
+                 unique_dxcc.add(dxcc)
+                 stats["dxcc_breakdown"][dxcc] = stats["dxcc_breakdown"].get(dxcc, 0) + 1
+                 
+             if qso.get("CQZ"): unique_cq.add(qso.get("CQZ"))
+             if qso.get("ITUZ"): unique_itu.add(qso.get("ITUZ"))
+             
+             # Top Hunter logic
+             call = qso.get("CALL", "?").upper()
+             if call not in hunter_grids: hunter_grids[call] = set()
+             hunter_grids[call].update(qs_grids)
+             
+             # Distance Calc
+             my_grid = qso.get("MY_GRIDSQUARE") or \
+                       (qso.get("MY_VUCC_GRIDS", "").split(",")[0] if qso.get("MY_VUCC_GRIDS") else None)
+             
+             if my_grid and len(my_grid) >= 4:
+                 my_coord = grid_to_center(my_grid[:4])
+                 for g in qs_grids:
+                     target_coord = grid_to_center(g)
+                     if my_coord and target_coord:
+                         d = calc_dist(my_coord[0], my_coord[1], target_coord[0], target_coord[1])
+                         if d > stats["max_distance"]:
+                             stats["max_distance"] = d
+
+        stats["total_grids"] = len(unique_grids)
+        stats["total_sats"] = len(unique_sats)
+        stats["dxcc_count"] = len(unique_dxcc)
+        stats["cq_count"] = len(unique_cq)
+        stats["itu_count"] = len(unique_itu)
         
-        for qso in qsos:
-            # Check confirmation
-            is_confirmed = (qso.get("QSL_RCVD", "").upper() == "Y")
-            if is_confirmed:
-                call = qso.get("CALL", "?")
-                grids = self._extract_grids(qso)
-                for g in grids:
-                    labels[g] = call
-        
-        return labels
+        # Prepare Top Hunters (Sort by Unique Grids desc)
+        sorted_hunters = sorted(hunter_grids.items(), key=lambda item: len(item[1]), reverse=True)
+        # Pegar top 5
+        for call, grids in sorted_hunters[:5]:
+            stats["top_hunters"].append({
+                "call": call,
+                "count": len(grids),
+                "grids": ", ".join(sorted(list(grids))[:5]) + ("..." if len(grids)>5 else "")
+            })
+            
+        return stats
