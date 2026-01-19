@@ -18,10 +18,11 @@ class Config:
     LOTW_USERNAME = _get_required_env("LOTW_USERNAME")
     LOTW_PASSWORD = _get_required_env("LOTW_PASSWORD")
     
-    # Caminho base do projeto
-    BASE_DIR = Path(__file__).parent.parent.resolve()
+    # Caminho base: Diretório atual de execução (CWD)
+    # Isso permite rodar múltiplas instâncias em pastas diferentes usando o mesmo código.
+    BASE_DIR = Path.cwd()
     
-    # Arquivo de estado padrão: <projeto>/data/state.json
+    # Arquivo de estado padrão: <cwd>/data/state.json
     STATE_FILE = Path(os.getenv("STATE_FILE", BASE_DIR / "data" / "state.json"))
 
     # Garante que o diretório de dados exista

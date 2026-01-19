@@ -275,7 +275,7 @@ class MonitorBot:
                      msg.append(f"- {country}: {count}")
             else:
                 msg.append("(Nenhum)")
-                    msg.append(f"• {s}: {c} QSOs")
+
             
             self.send_message(chat_id, "\n".join(msg))
 
