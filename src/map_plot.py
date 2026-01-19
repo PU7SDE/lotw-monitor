@@ -85,27 +85,19 @@ class MapGenerator:
                 w, h = im.size
                 
                 # Fonte
+                # Fonte
+                # Tamanho fixo relativo a resolução 8k?
+                # 8192px / 180 deg = ~45.5 px por grau de latitude.
+                # Grid 4 chars = 1 deg altura.
+                # Temos ~45px de altura vertical disponivel.
+                # Texto tamanho 10 fica ~10-12px altura real. 2 linhas = 24px.
+                # Com margem, 12px é um bom tamanho seguro. 
+                # Se usarmos sistema Arial Bold, ele renderiza bem.
+                
                 try:
-                    # Tamanho fixo relativo a resolução 8k?
-                    # 1 grau = ~22px. Grid height = 10 deg (field) ou 1 deg (square)?
-                    # GridSquare (4 chars) é 1 grau latitude x 2 graus longitude.
-                    # Altura = ~22px. Largura = ~45px.
-                    # Fonte precisa ser PEQUENA ou o mapa expandido.
-                    # Se usarmos 10px, cabe mal.
-                    # Mas o usuário dá zoom.
-                    # Vamos tentar 24px (fica maior que o quadrado 'físico', mas no zoom ok? Não, vai sobrepor)
-                    # Ah, espere.
-                    # 8192px / 180 deg = ~45.5 px por grau de latitude.
-                    # Grid 4 chars = 1 deg altura.
-                    # Temos ~45px de altura vertical disponivel.
-                    # Texto tamanho 10 fica ~10-12px altura real. 2 linhas = 24px.
-                    # Com margem, 12px é um bom tamanho seguro. 
-                    # Se usarmos sistema Arial Bold, ele renderiza bem.
-                    
-                    try:
-                        font = ImageFont.truetype(str(self.font_path), 12)
-                    except:
-                        font = ImageFont.load_default()
+                    font = ImageFont.truetype(str(self.font_path), 12)
+                except:
+                    font = ImageFont.load_default()
 
                 # 2. Desenha todos os grids
                 overlay = Image.new("RGBA", im.size, (255, 255, 255, 0))
