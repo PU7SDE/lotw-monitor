@@ -294,7 +294,7 @@ class MonitorBot:
                  
                  img_bytes = self.map_gen.generate(confirmed, worked, grid_labels)
                  if img_bytes:
-                     self.send_photo(chat_id, img_bytes, "Mapa de Grids Confirmados (Verde)")
+                     self.send_photo(chat_id, img_bytes, "Mapa de Grids Confirmados")
                  else:
                      logger.error("Falha ao gerar mapa: map_gen.generate retornou vazio.")
                      self.send_message(chat_id, "❌ Erro ao gerar o mapa: retorno vazio.")
