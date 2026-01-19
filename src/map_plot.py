@@ -183,10 +183,9 @@ class MapGenerator:
                     stroke_w = 1
 
                 # Colors
-                # User requested "Laranja" (Orange) for better highlight/contrast
-                # Orange: (255, 165, 0)
-                # Using a slightly translucent Orange
-                fill_color = (255, 165, 0, 90)
+                # User requested "Different Orange" tone.
+                # Switching to Dark Orange: (255, 140, 0) for a richer/deeper look
+                fill_color = (255, 140, 0, 90)
                 outline_color = (0, 0, 0)
                 text_color = (255, 255, 255)
                 
