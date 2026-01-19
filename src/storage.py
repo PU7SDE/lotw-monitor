@@ -132,3 +132,29 @@ class Storage:
                 stats[g]["count"] += 1
                 stats[g]["calls"].add(qso.get("CALL", "UNKNOWN"))
         return stats
+
+    def get_grid_labels(self) -> Dict[str, str]:
+        """
+        Retorna um dicionário {GRID: CALL} para os grids confirmados.
+        Escolhe arbitrariamente um call caso haja múltiplos (ex: o mais recente processado).
+        """
+        labels = {}
+        # Itera cache para encontrar confirmados
+        # Ordenamos por data para tentar pegar o mais recente? O cache não é ordenado garatido.
+        # Mas podemos iterar e sobrescrever.
+        
+        # Ordenar QSOs por data (opcional, mas bom para consistência)
+        qsos = list(self.data.get("qso_cache", {}).values())
+        # Sort by Date + Time
+        qsos.sort(key=lambda x: (x.get("QSO_DATE", ""), x.get("TIME_ON", "")))
+        
+        for qso in qsos:
+            # Check confirmation
+            is_confirmed = (qso.get("QSL_RCVD", "").upper() == "Y")
+            if is_confirmed:
+                call = qso.get("CALL", "?")
+                grids = self._extract_grids(qso)
+                for g in grids:
+                    labels[g] = call
+        
+        return labels

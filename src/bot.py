@@ -80,7 +80,8 @@ class MonitorBot:
         try:
              confirmed = self.storage.get_confirmed_grids()
              # Passamos worked vazio pois removemos a visualização
-             img_bytes = self.map_gen.generate(confirmed, set())
+             grid_labels = self.storage.get_grid_labels()
+             img_bytes = self.map_gen.generate(confirmed, set(), grid_labels)
              if img_bytes:
                  self.send_photo(self.allowed_chat_id, img_bytes, "🗺️ Mapa atualizado com os novos grids!")
         except Exception as e:
@@ -213,7 +214,11 @@ class MonitorBot:
              worked = self.storage.get_worked_grids()
              
              try:
-                 img_bytes = self.map_gen.generate(confirmed, worked)
+                 confirmed = self.storage.get_confirmed_grids()
+                 worked = self.storage.get_worked_grids()
+                 grid_labels = self.storage.get_grid_labels()
+                 
+                 img_bytes = self.map_gen.generate(confirmed, worked, grid_labels)
                  if img_bytes:
                      self.send_photo(chat_id, img_bytes, "Mapa de Grids Confirmados (Verde)")
                  else:
@@ -287,7 +292,11 @@ class MonitorBot:
                 confirmed = self.storage.get_confirmed_grids()
                 confirmed.add(grid_test) # Adiciona temporariamente para o mapa
                 
-                img_bytes = self.map_gen.generate(confirmed, set())
+                # Mock labels
+                grid_labels = self.storage.get_grid_labels()
+                grid_labels[grid_test] = "TEST-CALL"
+                
+                img_bytes = self.map_gen.generate(confirmed, set(), grid_labels)
                 if img_bytes:
                     self.send_photo(chat_id, img_bytes, "🗺️ Mapa atualizado com os novos grids! (TESTE)")
                 else:
