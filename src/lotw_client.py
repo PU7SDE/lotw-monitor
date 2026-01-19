@@ -42,7 +42,7 @@ class LoTWClient:
         # O LoTWReport é meio chato. Se qso_qsl='no', ele lista tudo.
         # A gente filtra no client o que é confirmed.
         
-        logger.info(f"Baixando ADIF do LoTW (since={params['qso_qslsince']})...")
+        logger.info(f"Baixando ADIF do LoTW (since={params.get('qso_qslsince', 'ALL')})...")
         try:
             resp = requests.get(self.LOTW_URL, params=params, timeout=120)  # timeout maior pois pode ser grande
             resp.raise_for_status()
