@@ -264,6 +264,19 @@ class MonitorBot:
                 for s, c in sorted_sats:
                     msg.append(f"- {s}: {c}")
 
+            # WAB List (Brazil States)
+            msg.append("")
+            msg.append("🇧🇷 *Estados Confirmados (WAB):*")
+            sorted_wab = sorted(d.get('wab_breakdown', {}).items(), key=lambda x: x[1], reverse=True)
+            if sorted_wab:
+                # Group in lines to save space? "SP: 5 | RJ: 3 | ..."
+                # Let's try 3 per line or just a list if < 10.
+                # User asked for a list. Let's do a simple list first.
+                for state, count in sorted_wab:
+                    msg.append(f"- {state}: {count}")
+            else:
+                msg.append("(Nenhum)")
+
             # DXCC List
             msg.append("")
             msg.append("🌍 *DXCC Confirmados:*")
@@ -276,7 +289,6 @@ class MonitorBot:
                      msg.append(f"- {country}: {count}")
             else:
                 msg.append("(Nenhum)")
-
             
             self.send_message(chat_id, "\n".join(msg))
 

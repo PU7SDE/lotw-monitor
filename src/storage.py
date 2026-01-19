@@ -295,13 +295,11 @@ class Storage:
                 break
             
         # WAB (Work All Brazil)
-        from .wab_data import get_state_from_call, get_all_states
+        from .wab_data import get_state_from_call, get_state_from_grid, get_all_states
         
         wab_states = set()
+        wab_breakdown = {} # UF -> Count
         
-        # Re-iterate QSOs for WAB? Or stick to loop above?
-        # Better to iterate above to avoid double loop, but scope is tricky.
-        # Let's iterate here, it's fast enough.
         for qso in self.data.get("qso_cache", {}).values():
             # Check confirmed
             if (qso.get("QSL_RCVD", "").upper() != "Y"): continue
@@ -309,20 +307,28 @@ class Storage:
             # Check Country
             if qso.get("COUNTRY", "").upper() != "BRAZIL": continue
             
-            # Get Call
-            call = qso.get("CALL", "")
-            state = get_state_from_call(call)
+            # 1. Try by Grid (Most Accurate for Rovers)
+            grids_list = list(self._extract_grids(qso))
+            best_grid = grids_list[0] if grids_list else ""
+            state = get_state_from_grid(best_grid)
             
-            # If state not found via call, try ADIF STATE field just in case
+            # 2. Try by Callsign (Fallback)
+            if not state:
+                 call = qso.get("CALL", "")
+                 state = get_state_from_call(call)
+            
+            # 3. Try by ADIF Field
             if not state:
                 st = qso.get("STATE", "").upper().strip()
                 if len(st) == 2: state = st
                 
             if state:
                 wab_states.add(state)
+                wab_breakdown[state] = wab_breakdown.get(state, 0) + 1
         
         stats["wab_count"] = len(wab_states)
         stats["wab_missing"] = sorted(list(set(get_all_states()) - wab_states))
         stats["wab_confirmed_list"] = sorted(list(wab_states))
+        stats["wab_breakdown"] = wab_breakdown
 
         return stats
