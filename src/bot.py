@@ -11,6 +11,7 @@ from .lotw_client import LoTWClient
 from .tle import TLEMonitor
 from .map_plot import MapGenerator
 import io
+import json
 
 logger = logging.getLogger(__name__)
 
@@ -24,9 +25,20 @@ class MonitorBot:
         self.map_gen = MapGenerator(Config.STATE_FILE.parent)
         self._lock = threading.Lock()  # Para evitar rodar sync concorrentemente
 
+    # Teclado Principal Persistente
+    MAIN_KEYBOARD = {
+        "keyboard": [
+            [{"text": "/stats"}, {"text": "/map"}],
+            [{"text": "/sync"}, {"text": "/sync_full"}],
+            [{"text": "/grids"}, {"text": "/tle"}]
+        ],
+        "resize_keyboard": True,
+        "persistent": True
+    }
+
     def send_photo(self, chat_id: str, photo_bytes: bytes, caption: str = ""):
         url = f"https://api.telegram.org/bot{self.token}/sendPhoto"
-        data = {"chat_id": chat_id, "caption": caption}
+        data = {"chat_id": chat_id, "caption": caption, "reply_markup": json.dumps(self.MAIN_KEYBOARD)}
         # O gerador retorna PNG. É importante o nome/mime baterem.
         files = {"photo": ("map.png", photo_bytes, "image/png")}
         try:
@@ -35,13 +47,19 @@ class MonitorBot:
         except Exception as e:
             logger.error(f"Erro ao enviar foto: {e}")
 
-    def send_message(self, chat_id: str, text: str):
+    def send_message(self, chat_id: str, text: str, reply_markup=None):
         url = f"https://api.telegram.org/bot{self.token}/sendMessage"
+        
+        # Use default keyboard if not provided
+        if reply_markup is None:
+            reply_markup = self.MAIN_KEYBOARD
+            
         payload = {
             "chat_id": chat_id,
             "text": text,
             "parse_mode": "Markdown",
-            "disable_web_page_preview": True
+            "disable_web_page_preview": True,
+            "reply_markup": reply_markup
         }
         try:
             r = requests.post(url, json=payload, timeout=15)
