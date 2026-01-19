@@ -1,82 +1,151 @@
 import re
+import json
+import os
+from pathlib import Path
+import requests
+import logging
 
-# Grid to State Mapping for Brazil
-# Source: Derived from major cities/capitals and common knowledge
-GRID_TO_STATE = {
-    # AC - Rio Branco
-    "FI60": "AC", "FI61": "AC",
-    # AL - Maceió
-    "HH20": "AL",
-    # AP - Macapá
-    "GI90": "AP", "GJ90": "AP",
-    # AM - Manaus
-    "FI66": "AM", "FJ92": "AM", "GJ93": "AM",
-    # BA - Salvador
-    "HH17": "BA", "HH27": "BA", "HH38": "BA", "GH56": "BA", "GI90": "BA",
-    # CE - Fortaleza
-    "HK16": "CE", "HI16": "CE", "HI06": "CE",
-    # DF - Brasília
-    "GH64": "DF",
-    # ES - Vitória
-    "GG99": "ES", "GH90": "ES",
-    # GO - Goiânia (GH63)
-    "GH63": "GO", "GH53": "GO",
-    # MA - São Luís
-    "GI87": "MA", "GI75": "MA",
-    # MT - Cuiabá
-    "GH34": "MT", "GH44": "MT",
-    # MS - Campo Grande
-    "GH49": "MS", 
-    # MG - BH
-    "GH70": "MG", "GH80": "MG", "GH81": "MG", "GH71": "MG", "GG79": "MG",
-    # PA - Belém
-    "GI98": "PA", "GI88": "PA", "GI89": "PA",
-    # PB - João Pessoa
-    "HI22": "PB", "HI23": "PB",
-    # PR - Curitiba
-    "GG54": "PR", "GG44": "PR", "GG64": "PR",
-    # PE - Recife
-    "HI21": "PE", "HI11": "PE", "HI31": "PE",
-    # PI - Teresina
-    "GI84": "PI", "GI74": "PI",
-    # RJ - Rio
-    "GG87": "RJ", "GG77": "RJ", "GG88": "RJ",
-    # RN - Natal
-    "HI24": "RN", "HI34": "RN",
-    # RS - Porto Alegre
-    "GG49": "RS", "GG39": "RS", "GG59": "RS", "GF49": "RS",
-    # RO - Porto Velho
-    "FI91": "RO", "FJ91": "RO",
-    # RR - Boa Vista
-    "FJ92": "RR",
-    # SC - Florianópolis
-    "GG52": "SC", "GG43": "SC",
-    # SP - São Paulo
-    "GG66": "SP", "GG67": "SP", "GG56": "SP", "GG76": "SP",
-    # SE - Aracaju
-    "HH19": "SE",
-    # TO - Palmas
-    "GH69": "TO", "GI60": "TO", "GH59": "TO",
-}
+try:
+    from shapely.geometry import shape, Point
+    SHAPELY_AVAILABLE = True
+except ImportError:
+    SHAPELY_AVAILABLE = False
+
+logger = logging.getLogger(__name__)
+
+# Config
+GEOJSON_URL = "https://raw.githubusercontent.com/codeforgermany/click_that_hood/main/public/data/brazil-states.geojson"
+# Base dir determination (compatible with config.py logic)
+BASE_DIR = Path.cwd()
+GEOJSON_PATH = BASE_DIR / "data" / "brazil-states.geojson"
+
+POLYGONS_CACHE = {} # State Code -> Polygon/MultiPolygon
+
+def _ensure_geojson():
+    """Baixa o GeoJSON dos estados se não existir."""
+    if GEOJSON_PATH.exists():
+        return
+
+    try:
+        logger.info("Baixando GeoJSON de estados do Brasil...")
+        r = requests.get(GEOJSON_URL, timeout=30)
+        r.raise_for_status()
+        
+        # Ensure dir
+        GEOJSON_PATH.parent.mkdir(parents=True, exist_ok=True)
+        
+        with open(GEOJSON_PATH, 'wb') as f:
+            f.write(r.content)
+        logger.info("GeoJSON salvo.")
+    except Exception as e:
+        logger.error(f"Erro ao baixar GeoJSON: {e}")
+
+def _load_polygons():
+    """Carrega polígonos na memória."""
+    if POLYGONS_CACHE: return
+    
+    if not SHAPELY_AVAILABLE:
+        logger.warning("Shapely não instalado. Geometria desativada.")
+        return
+
+    _ensure_geojson()
+    if not GEOJSON_PATH.exists(): return
+
+    try:
+        with open(GEOJSON_PATH, 'r', encoding='utf-8') as f:
+            data = json.load(f)
+        
+        for feature in data.get('features', []):
+            props = feature.get('properties', {})
+            geom = feature.get('geometry')
+            
+            # The GeoJSON from 'click_that_hood' uses 'sigla' or 'acronym' usually?
+            # Let's check properties structure if possible.
+            # Usually: 'sigla', 'name'.
+            # click_that_hood brazil-states properties: 
+            # {"name": "Acre", "sigla": "AC", ...}
+            
+            sigla = props.get('sigla')
+            if not sigla and 'name' in props:
+                # Map name to sigla if needed? 
+                # Hopefully 'sigla' is there. If not, we might need a backup map.
+                # Let's assume standard behavior or map common names.
+                # Inspecting online source: it has "sigla": "AC". Verified.
+                sigla = props.get('sigla')
+
+            if sigla and geom:
+                POLYGONS_CACHE[sigla] = shape(geom)
+                
+    except Exception as e:
+        logger.error(f"Erro ao carregar polígonos: {e}")
+
+def grid_to_latlon(grid: str):
+    """Retorna (lat, lon) central do Grid."""
+    grid = grid.upper().strip()
+    if len(grid) < 4: return None
+    
+    # Field
+    lon_f = (ord(grid[0]) - ord('A')) * 20 - 180
+    lat_f = (ord(grid[1]) - ord('A')) * 10 - 90
+    # Square
+    lon_s = int(grid[2]) * 2
+    lat_s = int(grid[3]) * 1
+    
+    # Center offsets
+    lat_off = 0.5
+    lon_off = 1.0
+    
+    # Subsquare handling (6 chars)
+    if len(grid) >= 6:
+        # grid[4] (Lon) is a..x (24 divs of 2 deg => 5 mins = 1/12 deg)
+        # grid[5] (Lat) is a..x (24 divs of 1 deg => 2.5 mins = 1/24 deg)
+        lon_ss = (ord(grid[4]) - ord('A')) * (2.0/24.0)
+        lat_ss = (ord(grid[5]) - ord('A')) * (1.0/24.0)
+        # Center of subsquare
+        lon_off = (2.0/24.0) / 2
+        lat_off = (1.0/24.0) / 2
+        
+        lat = lat_f + lat_s + lat_ss + lat_off
+        lon = lon_f + lon_s + lon_ss + lon_off
+    else:
+        # Center of square
+        lat = lat_f + lat_s + lat_off
+        lon = lon_f + lon_s + lon_off
+        
+    return lat, lon
 
 def get_state_from_grid(grid: str) -> str:
-    """Mapeia Grid -> Estado (Prioridade sobre Callsign)."""
+    """Mapeia Grid -> Estado usando Geometria (Ponto no Polígono)."""
     if not grid or len(grid) < 4: return None
-    grid = grid.upper().strip()[:4]
-    return GRID_TO_STATE.get(grid)
+    if not SHAPELY_AVAILABLE: return None
+    
+    try:
+        _load_polygons()
+        if not POLYGONS_CACHE: return None
+        
+        lat, lon = grid_to_latlon(grid)
+        pt = Point(lon, lat)
+        
+        for sigla, poly in POLYGONS_CACHE.items():
+            if poly.contains(pt):
+                return sigla
+                
+        # Fallback: Point might be ON border? 
+        # shapely .intersects or .touches? .contains is standard.
+        # Maybe use .distance(pt) < small_epsilon if failed?
+        # For now, simplistic.
+        return None
+        
+    except Exception as e:
+        logger.error(f"Erro no geo-check do grid {grid}: {e}")
+        return None
 
 def get_state_from_call(call: str) -> str:
     """
     Deduz o estado (UF) brasileiro baseado no indicativo (Callsign).
-    Referência: ANATEL / LABRE / ITU.
-    Retorna a sigla do estado (Ex: 'SP', 'RJ') ou None se não encontrado.
+    Lógica de fallback mantida.
     """
     call = call.upper().strip()
-    
-    # Regex para separar Prefixo, Número e Sufixo
-    # Ex: PU7SDE -> Pfx: PU, Reg: 7, Suf: SDE
-    # Ex: PY2XYZ -> Pfx: PY, Reg: 2, Suf: XYZ
-    # Ex: KD8XYZ (USA) -> None
     
     # 1. Verifica se é Brasil (PPA-PYZ, ZVA-ZZZ)
     if not re.match(r'^(PP|PQ|PR|PS|PT|PU|PV|PW|PX|PY|ZV|ZW|ZX|ZY|ZZ)', call):
@@ -159,9 +228,9 @@ def get_state_from_call(call: str) -> str:
         if pfx == 'PT': return 'AC'
         if pfx == 'PQ': return 'AP'
         if pfx == 'PP': return 'AM'
-        if pfx == 'PR': return 'MA' # MA is listed as PR8 in some sources, others PS8? Wait, PS8=PI. Let's trust PR=MA.
+        if pfx == 'PR': return 'MA' 
         if pfx == 'PY': return 'PA'
-        if pfx == 'PS': return 'PI' # PI (Piauí) uses PS8
+        if pfx == 'PS': return 'PI'
         if pfx == 'PW': return 'RO'
         if pfx == 'PV': return 'RR'
         if pfx == 'PU':
