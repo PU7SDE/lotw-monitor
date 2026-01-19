@@ -254,7 +254,6 @@ class MonitorBot:
                 msg.append("🏆 *Top Grid Activators:*")
                 for idx, h in enumerate(d['top_hunters'], 1):
                     msg.append(f"{idx}. *{h['call']}* - {h['count']} grids")
-            # else: don't show anything
             
             # Breakdowns simplificados (Top 3 Sats)
             msg.append("")
@@ -262,6 +261,20 @@ class MonitorBot:
             sorted_sats = sorted(d['sats_breakdown'].items(), key=lambda x: x[1], reverse=True)[:3]
             if sorted_sats:
                 for s, c in sorted_sats:
+                    msg.append(f"- {s}: {c}")
+
+            # DXCC List
+            msg.append("")
+            msg.append("🌍 *DXCC Confirmados:*")
+            # Sort by count desc
+            sorted_dxcc = sorted(d['dxcc_breakdown'].items(), key=lambda x: x[1], reverse=True)
+            if sorted_dxcc:
+                # Format: "BRAZIL (10), ARGENTINA (5)" to save vertical space? 
+                # Or list? List is clearer.
+                for country, count in sorted_dxcc:
+                     msg.append(f"- {country}: {count}")
+            else:
+                msg.append("(Nenhum)")
                     msg.append(f"• {s}: {c} QSOs")
             
             self.send_message(chat_id, "\n".join(msg))
