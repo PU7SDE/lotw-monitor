@@ -292,6 +292,53 @@ class MonitorBot:
             
             self.send_message(chat_id, "\n".join(msg))
 
+        elif text.startswith("/debug_state"):
+            # Usage: /debug_state MS
+            try:
+                uf_target = text.split()[1].upper()
+                from .wab_data import get_state_from_call, get_state_from_grid
+                
+                found_msgs = []
+                count = 0
+                
+                for qso in self.storage.data.get("qso_cache", {}).values():
+                    if qso.get("QSL_RCVD", "").upper() != "Y": continue
+                    if qso.get("COUNTRY", "").upper() != "BRAZIL": continue
+                    
+                    # Logic match
+                    grids_list = list(self.storage._extract_grids(qso))
+                    best_grid = grids_list[0] if grids_list else ""
+                    
+                    state = get_state_from_grid(best_grid)
+                    source = f"Grid {best_grid}"
+                    
+                    if not state:
+                        call = qso.get("CALL", "")
+                        state = get_state_from_call(call)
+                        source = f"Call {call}"
+                        
+                    if not state:
+                         st = qso.get("STATE", "").upper().strip()
+                         if len(st)==2: 
+                             state = st
+                             source = "ADIF State"
+
+                    if state == uf_target:
+                        count += 1
+                        if count <= 10:
+                            found_msgs.append(f"• {qso.get('CALL')} ({qso.get('QSO_DATE')}) -> Via {source}")
+                            
+                if found_msgs:
+                    self.send_message(chat_id, f"🔍 Resultados para {uf_target} (Total: {count}):\n" + "\n".join(found_msgs))
+                else:
+                    self.send_message(chat_id, f"Nenhum QSO encontrado para o estado {uf_target}.")
+                    
+            except IndexError:
+                self.send_message(chat_id, "Use: /debug_state <UF> (Ex: /debug_state MS)")
+            except Exception as e:
+                logger.error(f"Erro debug_state: {e}")
+                self.send_message(chat_id, "Erro ao buscar.")
+
         elif text == "/sync" or text.startswith("/sync ") or text == "/sync_full" or text == "🔄 Sync" or text == "📥 Sync Full":
             # Parse arguments
             args = text.split()
