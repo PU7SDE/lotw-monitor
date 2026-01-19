@@ -317,18 +317,17 @@ class MonitorBot:
                     if prop != "SAT" and not sat_name:
                         continue
                     
-                    # Logic match
-                    grids_list = list(self.storage._extract_grids(qso))
-                    best_grid = grids_list[0] if grids_list else ""
-                    
-                    state = get_state_from_grid(best_grid)
-                    source = f"Grid {best_grid}"
+                    # Logic match (Call Priority)
+                    call = qso.get("CALL", "")
+                    state = get_state_from_call(call)
+                    source = f"Call {call}"
                     
                     if not state:
-                        call = qso.get("CALL", "")
-                        state = get_state_from_call(call)
-                        source = f"Call {call}"
-                        
+                        grids_list = list(self.storage._extract_grids(qso))
+                        best_grid = grids_list[0] if grids_list else ""
+                        state = get_state_from_grid(best_grid)
+                        source = f"Grid {best_grid}"
+
                     if not state:
                          st = qso.get("STATE", "").upper().strip()
                          if len(st)==2: 

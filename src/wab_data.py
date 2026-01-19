@@ -186,27 +186,29 @@ def get_state_from_call(call: str) -> str:
     pfx, reg, suf = match.groups()
     reg = int(reg)
     
+    # Helper for generic prefixes (PY, ZV, etc.)
+    is_general = pfx in ['PY', 'PW', 'PX', 'ZV', 'ZW', 'ZX', 'ZY', 'ZZ']
+    
     # --- LOGICA DE REGIOES ---
     
     # REGIÃO 1: RJ, ES
     if reg == 1:
         if pfx == 'PP': return 'ES'
-        if pfx == 'PY': return 'RJ'
         if pfx == 'PU':
             if 'AAA' <= suf <= 'IZZ': return 'ES'
             return 'RJ'
-        return 'RJ'
+        return 'RJ' # PY1, ZV1 -> RJ
 
     # REGIÃO 2: SP, GO, DF, TO
     if reg == 2:
         if pfx == 'PQ': return 'TO'
         if pfx == 'PT': return 'DF'
         if pfx == 'PP': return 'GO'
-        if pfx == 'PY': return 'SP'
         if pfx == 'PU':
             if 'AAA' <= suf <= 'EZZ': return 'DF'
             if 'FAA' <= suf <= 'HZZ': return 'GO'
-            return 'SP' # Default (Maioria PU2 é SP)
+            return 'SP' 
+        # PY2, ZV2 -> SP (Majority, though GO exists. Only suffix could tell for strictness, but standard is SP)
         return 'SP'
 
     # REGIÃO 3: RS
@@ -220,35 +222,38 @@ def get_state_from_call(call: str) -> str:
     # REGIÃO 5: SC, PR
     if reg == 5:
         if pfx == 'PP': return 'SC'
-        if pfx == 'PY': return 'PR'
         if pfx == 'PU':
              if 'AAA' <= suf <= 'LZZ': return 'SC'
              return 'PR'
-        return 'PR'
+        return 'PR' # PY5, ZV5 -> PR
 
     # REGIÃO 6: BA, SE
     if reg == 6:
         if pfx == 'PP': return 'SE'
-        if pfx == 'PY': return 'BA'
         if pfx == 'PU':
             if 'AAA' <= suf <= 'IZZ': return 'SE'
             return 'BA'
-        return 'BA'
+        return 'BA' # PY6 -> BA
 
     # REGIÃO 7: AL, CE, PB, PE, PI, RN
     if reg == 7:
         if pfx == 'PP': return 'AL'
         if pfx == 'PT': return 'CE'
         if pfx == 'PR': return 'PB'
-        if pfx == 'PY': return 'PE'
         if pfx == 'PS': return 'RN'
+        # PU logic logic refined
         if pfx == 'PU':
-            if suf.startswith(('A','B','C','D')): return 'AL'
-            if suf.startswith(('E','F','G','H')): return 'PB'
-            if suf.startswith(('M','N','O','P')): return 'CE'
-            if suf.startswith('R'): return 'PE'
-            if suf.startswith('S'): return 'RN'
-        return 'PE'
+            # A-D: Alagoas
+            if suf[0] in ['A','B','C','D']: return 'AL'
+            # E-H: Paraíba
+            if suf[0] in ['E','F','G','H']: return 'PB'
+            # I-L: Rio Grande do Norte (Confirmed via lookup)
+            if suf[0] in ['I','J','K','L']: return 'RN'
+            # M-P: Ceará (Likely block)
+            if suf[0] in ['M','N','O','P']: return 'CE'
+            # Q-Z: Pernambuco (Default/Remaining)
+            return 'PE'
+        return 'PE' # PY7 -> PE
 
     # REGIÃO 8: AC, AP, AM, MA, PA, PI, RO, RR
     if reg == 8:
