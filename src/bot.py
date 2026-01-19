@@ -305,6 +305,12 @@ class MonitorBot:
                     if qso.get("QSL_RCVD", "").upper() != "Y": continue
                     if qso.get("COUNTRY", "").upper() != "BRAZIL": continue
                     
+                    # Filter SAT only
+                    prop = qso.get("PROP_MODE", "").upper()
+                    sat_name = qso.get("SAT_NAME", "")
+                    if prop != "SAT" and not sat_name:
+                        continue
+                    
                     # Logic match
                     grids_list = list(self.storage._extract_grids(qso))
                     best_grid = grids_list[0] if grids_list else ""

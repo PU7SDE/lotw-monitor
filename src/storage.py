@@ -307,6 +307,12 @@ class Storage:
             # Check Country
             if qso.get("COUNTRY", "").upper() != "BRAZIL": continue
             
+            # Check Satellite Only (User Request)
+            prop = qso.get("PROP_MODE", "").upper()
+            sat_name = qso.get("SAT_NAME", "")
+            if prop != "SAT" and not sat_name:
+                continue
+            
             # 1. Try by Grid (Most Accurate for Rovers)
             grids_list = list(self._extract_grids(qso))
             best_grid = grids_list[0] if grids_list else ""
