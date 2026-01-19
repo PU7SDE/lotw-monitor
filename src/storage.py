@@ -294,4 +294,35 @@ class Storage:
             if len(stats["top_hunters"]) >= 5:
                 break
             
+        # WAB (Work All Brazil)
+        from .wab_data import get_state_from_call, get_all_states
+        
+        wab_states = set()
+        
+        # Re-iterate QSOs for WAB? Or stick to loop above?
+        # Better to iterate above to avoid double loop, but scope is tricky.
+        # Let's iterate here, it's fast enough.
+        for qso in self.data.get("qso_cache", {}).values():
+            # Check confirmed
+            if (qso.get("QSL_RCVD", "").upper() != "Y"): continue
+            
+            # Check Country
+            if qso.get("COUNTRY", "").upper() != "BRAZIL": continue
+            
+            # Get Call
+            call = qso.get("CALL", "")
+            state = get_state_from_call(call)
+            
+            # If state not found via call, try ADIF STATE field just in case
+            if not state:
+                st = qso.get("STATE", "").upper().strip()
+                if len(st) == 2: state = st
+                
+            if state:
+                wab_states.add(state)
+        
+        stats["wab_count"] = len(wab_states)
+        stats["wab_missing"] = sorted(list(set(get_all_states()) - wab_states))
+        stats["wab_confirmed_list"] = sorted(list(wab_states))
+
         return stats

@@ -245,6 +245,7 @@ class MonitorBot:
                 f"🗺️ *Grids:* `{d['total_grids']}` (VUCC: {d['total_grids']}/100)",
                 f"🛰️ *Satélites:* `{d['total_sats']}`",
                 f"📏 *Max DX:* `{d['max_distance']} km`",
+                f"🇧🇷 *WAB:* `{d['wab_count']}/27` UFs",
                 "",
                 f"🌍 *DXCC:* `{d['dxcc_count']}`  •  *CQ:* `{d['cq_count']}`  •  *ITU:* `{d['itu_count']}`",
             ]
