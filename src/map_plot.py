@@ -161,9 +161,9 @@ class MapGenerator:
                 
                 # We need to fit 2 lines (Grid + Call) + margins
                 # Ideally font size is around 40% of grid height?
-                # User asked to reduce slightly from 1.8 (was overflowing).
-                # Trying 2.1 (approx 47% height)
-                target_font_size = int(px_per_deg / 2.1)
+                # User asked to reduce MORE (was 2.1).
+                # Trying 2.3 (approx 43% height)
+                target_font_size = int(px_per_deg / 2.3)
                 
                 # Clamp minimum size to ensure readability even if it overlaps borders slightly
                 if target_font_size < 10:
@@ -183,8 +183,9 @@ class MapGenerator:
                     stroke_w = 1
 
                 # Colors
-                # Reverting to Green as per user request
-                fill_color = (34, 197, 94, 60) # Verde original
+                # User requested "Navy/Marine Blue" but visible (not Celestial/Sky)
+                # Royal Blue: (65, 105, 225) tends to look good and contrasty
+                fill_color = (65, 105, 225, 80) 
                 outline_color = (0, 0, 0)
                 text_color = (255, 255, 255)
                 
