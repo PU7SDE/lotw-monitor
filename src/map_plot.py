@@ -133,31 +133,32 @@ class MapGenerator:
                         found_any = True
                     
                     if found_any:
-                        # Limites da América Latina + Caribe (Default Minimum Crop)
-                        # North: 35, South: -60, West: -120, East: -25
-                        sa_min_lat = -60.0
-                        sa_max_lat = 35.0
-                        sa_min_lon = -120.0
-                        sa_max_lon = -25.0
+                        # Tenta focar APENAS nos grids (Zoom Máximo)
+                        # Margem de apenas 3 graus para dar bastante zoom
+                        padding = 3.0
                         
-                        # Expande os bounds se os grids estiverem fora da AS
-                        final_min_lat = min(min_lat, sa_min_lat)
-                        final_max_lat = max(max_lat, sa_max_lat)
-                        final_min_lon = min(min_lon, sa_min_lon)
-                        final_max_lon = max(max_lon, sa_max_lon)
+                        min_lat = max(-90.0, min_lat - padding)
+                        max_lat = min(90.0, max_lat + padding)
+                        min_lon = max(-180.0, min_lon - padding)
+                        max_lon = min(180.0, max_lon + padding)
                         
-                        # Margem de segurança (graus) - menor agora pois já temos uma visão ampla
-                        padding = 5.0
+                        # Garante um "zoom mínimo" de 20x20 graus para não ficar fechado demais em 1 grid só
+                        lat_span = max_lat - min_lat
+                        lon_span = max_lon - min_lon
                         
-                        # Aplica padding e clamp
-                        final_min_lat = max(-90.0, final_min_lat - padding)
-                        final_max_lat = min(90.0, final_max_lat + padding)
-                        final_min_lon = max(-180.0, final_min_lon - padding)
-                        final_max_lon = min(180.0, final_max_lon + padding)
-                        
+                        if lat_span < 20.0:
+                            mid = (min_lat + max_lat) / 2
+                            min_lat = max(-90.0, mid - 10.0)
+                            max_lat = min(90.0, mid + 10.0)
+                            
+                        if lon_span < 20.0:
+                            mid = (min_lon + max_lon) / 2
+                            min_lon = max(-180.0, mid - 10.0)
+                            max_lon = min(180.0, mid + 10.0)
+
                         # Converte geo coords para pixel coords
-                        left, bottom = self._project(final_min_lat, final_min_lon, w, h)
-                        right, top = self._project(final_max_lat, final_max_lon, w, h)
+                        left, bottom = self._project(min_lat, min_lon, w, h)
+                        right, top = self._project(max_lat, max_lon, w, h)
                         
                         # Ordena coordenadas para Crop (left, top, right, bottom)
                         crop_box = (int(left), int(top), int(right), int(bottom))
