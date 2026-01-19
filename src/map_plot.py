@@ -8,10 +8,9 @@ from pathlib import Path
 logger = logging.getLogger(__name__)
 
 class MapGenerator:
-    # Mapa Equiretangular (Plate Carrée) - Blue Marble Next Generation (NASA 8K)
     MAP_URL = "https://eoimages.gsfc.nasa.gov/images/imagerecords/57000/57752/land_shallow_topo_8192.tif"
-    # Font URL (Roboto Bold)
-    FONT_URL = "https://github.com/google/fonts/raw/main/ofl/roboto/Roboto-Bold.ttf"
+    # Font URL (Roboto Bold) - Updated to working raw URL
+    FONT_URL = "https://raw.githubusercontent.com/googlefonts/roboto/main/src/hinted/Roboto-Bold.ttf"
     
     def __init__(self, cache_dir: Path):
         self.cache_dir = cache_dir
@@ -162,11 +161,12 @@ class MapGenerator:
                 
                 # We need to fit 2 lines (Grid + Call) + margins
                 # Ideally font size is around 40% of grid height?
-                target_font_size = int(px_per_deg / 2.3)
+                # User asked for BIGGER. Let's try 50-55% (div 1.8)
+                target_font_size = int(px_per_deg / 1.8)
                 
                 # Clamp minimum size to ensure readability even if it overlaps borders slightly
-                if target_font_size < 9:
-                    target_font_size = 9
+                if target_font_size < 10:
+                    target_font_size = 10
                 
                 # Load Font
                 try:
@@ -182,7 +182,11 @@ class MapGenerator:
                     stroke_w = 1
 
                 # Colors
-                fill_color = (34, 197, 94, 60)
+                # User request: Blue or Orange (Contrast).
+                # Deep Sky Blue: (0, 191, 255)
+                # Orange: (255, 165, 0)
+                # Let's go with Deep Sky Blue for a "Holographic" look
+                fill_color = (0, 191, 255, 70) 
                 outline_color = (0, 0, 0)
                 text_color = (255, 255, 255)
                 
