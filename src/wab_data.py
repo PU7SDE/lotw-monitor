@@ -126,14 +126,29 @@ def get_state_from_grid(grid: str) -> str:
         lat, lon = grid_to_latlon(grid)
         pt = Point(lon, lat)
         
+        # 1. Strict Check (Contains)
         for sigla, poly in POLYGONS_CACHE.items():
             if poly.contains(pt):
                 return sigla
                 
-        # Fallback: Point might be ON border? 
-        # shapely .intersects or .touches? .contains is standard.
-        # Maybe use .distance(pt) < small_epsilon if failed?
-        # For now, simplistic.
+        # 2. Proximity Check (Coastal/Border Tolerance)
+        # "Não seja tão restritivo" - User Request.
+        # Check distance to all polygons, find min.
+        # 0.3 degrees is approx 33km. Sufficient for coastal grid centers.
+        TOLERANCE = 0.3 
+        
+        closest_state = None
+        min_dist = float('inf')
+        
+        for sigla, poly in POLYGONS_CACHE.items():
+            dist = poly.distance(pt)
+            if dist < min_dist:
+                min_dist = dist
+                closest_state = sigla
+                
+        if closest_state and min_dist <= TOLERANCE:
+            return closest_state
+            
         return None
         
     except Exception as e:
