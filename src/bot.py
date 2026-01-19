@@ -245,7 +245,7 @@ class MonitorBot:
                 f"🗺️ *Grids:* `{d['total_grids']}` (VUCC: {d['total_grids']}/100)",
                 f"🛰️ *Satélites:* `{d['total_sats']}`",
                 f"📏 *Max DX:* `{d['max_distance']} km`",
-                f"🇧🇷 *WAB:* `{d['wab_count']}/27` UFs",
+                # f"🇧🇷 *WAB:* `{d['wab_count']}/27` UFs",  # DISABLED (User Request)
                 "",
                 f"🌍 *DXCC:* `{d['dxcc_count']}`  •  *CQ:* `{d['cq_count']}`  •  *ITU:* `{d['itu_count']}`",
             ]
@@ -264,24 +264,22 @@ class MonitorBot:
                 for s, c in sorted_sats:
                     msg.append(f"- {s}: {c}")
 
-            # WAB List (Brazil States)
-            msg.append("")
-            msg.append("🇧🇷 *Estados Confirmados (WAB):*")
-            sorted_wab = sorted(d.get('wab_breakdown', {}).items(), key=lambda x: x[1], reverse=True)
-            if sorted_wab:
-                # Format: SP (12), RJ (5), ...
-                # Compact format
-                wab_str = ", ".join([f"{s} ({c})" for s, c in sorted_wab])
-                msg.append(wab_str)
-            else:
-                msg.append("(Nenhum)")
+            # WAB LIST DISABLED
+            # msg.append("")
+            # msg.append("🇧🇷 *Estados Confirmados (WAB):*")
+            # sorted_wab = sorted(d.get('wab_breakdown', {}).items(), key=lambda x: x[1], reverse=True)
+            # if sorted_wab:
+            #     wab_str = ", ".join([f"{s} ({c})" for s, c in sorted_wab])
+            #     msg.append(wab_str)
+            # else:
+            #     msg.append("(Nenhum)")
 
-            # WAB Missing
-            missing = d.get('wab_missing', [])
-            if missing:
-                msg.append("")
-                msg.append(f"⏳ *Faltam ({len(missing)}):*")
-                msg.append(", ".join(sorted(missing)))
+            # WAB Missing DISABLED
+            # missing = d.get('wab_missing', [])
+            # if missing:
+            #     msg.append("")
+            #     msg.append(f"⏳ *Faltam ({len(missing)}):*")
+            #     msg.append(", ".join(sorted(missing)))
 
             # DXCC List
             msg.append("")

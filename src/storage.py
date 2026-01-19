@@ -294,48 +294,48 @@ class Storage:
             if len(stats["top_hunters"]) >= 5:
                 break
             
-        # WAB (Work All Brazil)
-        from .wab_data import get_state_from_call, get_state_from_grid, get_all_states
+        # WAB (Work All Brazil) - DISABLED (User Request)
+        # from .wab_data import get_state_from_call, get_state_from_grid, get_all_states
         
-        wab_states = set()
-        wab_breakdown = {} # UF -> Count
+        # wab_states = set()
+        # wab_breakdown = {} # UF -> Count
         
-        for qso in self.data.get("qso_cache", {}).values():
-            # Check confirmed
-            if (qso.get("QSL_RCVD", "").upper() != "Y"): continue
-            
-            # Check Country
-            if qso.get("COUNTRY", "").upper() != "BRAZIL": continue
-            
-            # Check Satellite Only (User Request)
-            prop = qso.get("PROP_MODE", "").upper()
-            sat_name = qso.get("SAT_NAME", "")
-            if prop != "SAT" and not sat_name:
-                continue
-            
-            # 1. Try by Call (User Priority - "Volte para o indicativo")
-            # This ensures robust handling of suffixes (PU7) and avoids ocean grid issues.
-            call = qso.get("CALL", "")
-            state = get_state_from_call(call)
-            
-            # 2. Fallback to Grid (if Call fails or returns None)
-            if not state:
-                grids_list = list(self._extract_grids(qso))
-                best_grid = grids_list[0] if grids_list else ""
-                state = get_state_from_grid(best_grid)
-            
-            # 3. Fallback to ADIF State
-            if not state:
-                st = qso.get("STATE", "").upper().strip()
-                if len(st) == 2: state = st
-                
-            if state:
-                wab_states.add(state)
-                wab_breakdown[state] = wab_breakdown.get(state, 0) + 1
+        # for qso in self.data.get("qso_cache", {}).values():
+        #     # Check confirmed
+        #     if (qso.get("QSL_RCVD", "").upper() != "Y"): continue
+        #     
+        #     # Check Country
+        #     if qso.get("COUNTRY", "").upper() != "BRAZIL": continue
+        #     
+        #     # Check Satellite Only (User Request)
+        #     prop = qso.get("PROP_MODE", "").upper()
+        #     sat_name = qso.get("SAT_NAME", "")
+        #     if prop != "SAT" and not sat_name:
+        #         continue
+        #     
+        #     # 1. Try by Call (User Priority - "Volte para o indicativo")
+        #     # This ensures robust handling of suffixes (PU7) and avoids ocean grid issues.
+        #     call = qso.get("CALL", "")
+        #     state = get_state_from_call(call)
+        #     
+        #     # 2. Fallback to Grid (if Call fails or returns None)
+        #     if not state:
+        #         grids_list = list(self._extract_grids(qso))
+        #         best_grid = grids_list[0] if grids_list else ""
+        #         state = get_state_from_grid(best_grid)
+        #     
+        #     # 3. Fallback to ADIF State
+        #     if not state:
+        #         st = qso.get("STATE", "").upper().strip()
+        #         if len(st) == 2: state = st
+        #         
+        #     if state:
+        #         wab_states.add(state)
+        #         wab_breakdown[state] = wab_breakdown.get(state, 0) + 1
         
-        stats["wab_count"] = len(wab_states)
-        stats["wab_missing"] = sorted(list(set(get_all_states()) - wab_states))
-        stats["wab_confirmed_list"] = sorted(list(wab_states))
-        stats["wab_breakdown"] = wab_breakdown
+        # stats["wab_count"] = len(wab_states)
+        # stats["wab_missing"] = sorted(list(set(get_all_states()) - wab_states))
+        # stats["wab_confirmed_list"] = sorted(list(wab_states))
+        # stats["wab_breakdown"] = wab_breakdown
 
         return stats
