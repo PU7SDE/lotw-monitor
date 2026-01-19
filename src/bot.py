@@ -250,10 +250,16 @@ class MonitorBot:
             self.send_message(chat_id, "\n".join(msg))
 
         elif text == "/sync" or text.startswith("/sync "):
-            # Smart Sync: Se tivermos data de last_sync, é incremental. Se não, é full.
-            # O run_check_job decide baseado no estado.
-            self.send_message(chat_id, "🔄 Iniciando sincronização inteligente (Smart Sync)...")
-            t = threading.Thread(target=self.run_check_job, args=(True, chat_id, False)) 
+            # Parse arguments
+            args = text.split()
+            force_full = False
+            if len(args) > 1 and args[1].lower() == "full":
+                force_full = True
+            
+            mode_str = "COMPLETA (Full Download)" if force_full else "Inteligente (Smart Sync)"
+            self.send_message(chat_id, f"🔄 Iniciando sincronização: {mode_str}...")
+            
+            t = threading.Thread(target=self.run_check_job, args=(True, chat_id, force_full)) 
             t.start()
             
         elif text == "/map":
