@@ -267,15 +267,20 @@ class MonitorBot:
             # WAB List (Brazil States)
             msg.append("")
             msg.append("🇧🇷 *Estados Confirmados (WAB):*")
-            sorted_wab = sorted(d.get('wab_breakdown', {}).items(), key=lambda x: x[1], reverse=True)
             if sorted_wab:
-                # Group in lines to save space? "SP: 5 | RJ: 3 | ..."
-                # Let's try 3 per line or just a list if < 10.
-                # User asked for a list. Let's do a simple list first.
-                for state, count in sorted_wab:
-                    msg.append(f"- {state}: {count}")
+                # Format: SP (12), RJ (5), ...
+                # Compact format
+                wab_str = ", ".join([f"{s} ({c})" for s, c in sorted_wab])
+                msg.append(wab_str)
             else:
                 msg.append("(Nenhum)")
+
+            # WAB Missing
+            missing = d.get('wab_missing', [])
+            if missing:
+                msg.append("")
+                msg.append(f"⏳ *Faltam ({len(missing)}):*")
+                msg.append(", ".join(sorted(missing)))
 
             # DXCC List
             msg.append("")
