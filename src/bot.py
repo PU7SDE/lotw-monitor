@@ -247,15 +247,14 @@ class MonitorBot:
                 f"📏 *Max DX:* `{d['max_distance']} km`",
                 "",
                 f"🌍 *DXCC:* `{d['dxcc_count']}`  •  *CQ:* `{d['cq_count']}`  •  *ITU:* `{d['itu_count']}`",
-                "",
-                "🏆 *Top Grid Activators:*"
             ]
             
-            if d['top_hunters']:
+            if d.get('top_hunters'):
+                msg.append("")
+                msg.append("🏆 *Top Grid Activators:*")
                 for idx, h in enumerate(d['top_hunters'], 1):
                     msg.append(f"{idx}. *{h['call']}* - {h['count']} grids")
-            else:
-                msg.append("(Sem dados)")
+            # else: don't show anything
             
             # Breakdowns simplificados (Top 3 Sats)
             msg.append("")
