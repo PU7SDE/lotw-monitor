@@ -18,6 +18,7 @@ class LoTWClient:
         Baixa ADIF de confirmações (QSLs).
         :param since: Data YYYY-MM-DD para trazer apenas novos.
         """
+        params = {
             "login": self.username,
             "password": self.password,
             "qso_query": "1",

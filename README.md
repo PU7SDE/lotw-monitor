@@ -54,7 +54,10 @@ Além de monitorar QSLs, o bot oferece ferramentas úteis para o dia-a-dia da op
      LOTW_PASSWORD="SUA_SENHA_LOTW"
      ```
 
+> **Nota Importante**: O arquivo `.env` contém suas senhas e por isso é ignorado pelo Git (não sobe para o GitHub) por segurança. Use o `.env.example` como modelo para criar o seu.
+
 ## ▶️ Como Rodar
+
 
 O programa possui dois modos de operação:
 
