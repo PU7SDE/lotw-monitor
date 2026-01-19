@@ -267,10 +267,34 @@ class MonitorBot:
                 self.send_message(chat_id, f"⚠️ Grid {grid_for} não consta na lista.")
 
         elif text.startswith("/testgrid "):
-            # Simula um alerta visual
+            # Simula um alerta visual COMPLETO
             grid_test = text[10:].strip().upper()
-            dummy_info = {grid_test: {"call": "TEST-CALL", "date": datetime.now().strftime("%Y%m%d")}}
-            self.notify_new_grids([grid_test], dummy_info)
+            
+            # 1. Envia msg de texto simulada
+            msg_lines = [
+                "🚀 *Novo(s) grid(s) de satélite no LoTW!* (TESTE)",
+                "",
+                f"Você confirmou *1* novo(s) grid(s).",
+                f"Total confirmado: *{len(self.storage.known_grids) + 1}* grids (Simulado).",
+                "",
+                "*Detalhes:*",
+                f"• `{grid_test}` com `TEST-CALL` ({datetime.now().strftime('%d/%m/%Y')})"
+            ]
+            self.send_message(chat_id, "\n".join(msg_lines))
+            
+            # 2. Gera mapa INCLUINDO o grid de teste (sem salvar no banco)
+            try:
+                confirmed = self.storage.get_confirmed_grids()
+                confirmed.add(grid_test) # Adiciona temporariamente para o mapa
+                
+                img_bytes = self.map_gen.generate(confirmed, set())
+                if img_bytes:
+                    self.send_photo(chat_id, img_bytes, "🗺️ Mapa atualizado com os novos grids! (TESTE)")
+                else:
+                    self.send_message(chat_id, "❌ Erro ao gerar mapa de teste.")
+            except Exception as e:
+                logger.error(f"Erro teste: {e}")
+                self.send_message(chat_id, f"❌ Erro: {e}")
 
     def start_polling(self):
         logger.info("Bot iniciado...")
